@@ -4,6 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 表示言語
 ユーザーとのやり取りには日本語を利用してください
+また、文書を書く際の日本語は文字化けを避けるためUTF-8エンコーディングを利用してください
 
 ## プロジェクト概要
 
