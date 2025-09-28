@@ -123,13 +123,13 @@ git commit -m "fix: ユーザーメールアドレスバリデーションの正
 
 ```bash
 # 機能追加
-feature/[実装機能名]
+feature/###-[実装機能名]
 
 # 例
-feature/user-management
-feature/user-authentication
-feature/product-catalog
-feature/order-processing
+feature/001-user-management
+feature/002-user-authentication
+feature/003-product-catalog
+feature/101-order-processing
 ```
 
 ### ブランチ作成手順
