@@ -19,14 +19,6 @@ run: ## Run the application
 	@echo "Running application..."
 	@go run cmd/api-server/main.go
 
-dev: ## Run in development mode with auto-reload (requires air)
-	@if command -v air > /dev/null; then \
-		air; \
-	else \
-		echo "air not installed. Install with: go install github.com/cosmtrek/air@latest"; \
-		make run; \
-	fi
-
 # Test commands
 test: ## Run tests
 	@echo "Running tests..."
@@ -41,10 +33,6 @@ test-coverage: ## Run tests with coverage
 test-integration: ## Run integration tests
 	@echo "Running integration tests..."
 	@go test -tags=integration -v ./api/test/integration/...
-
-test-contract: ## Run contract tests
-	@echo "Running contract tests..."
-	@go test -v ./api/test/contract/...
 
 test-performance: ## Run performance tests
 	@echo "Running performance tests..."
@@ -76,7 +64,7 @@ vet: ## Run go vet
 	@go vet ./...
 
 # Mock generation
-mock-gen: ## Generate mocks using mockery
+mock: ## Generate mocks using mockery
 	@echo "Generating mocks..."
 	@if command -v mockery > /dev/null; then \
 		mockery --all --output=./internal/mocks --case=underscore; \
@@ -93,26 +81,6 @@ migrate: ## Run database migrations
 migrate-reset: ## Reset database (development only)
 	@echo "Resetting database..."
 	@go run cmd/api-server/main.go migrate-reset
-
-seed: ## Seed database with test data
-	@echo "Seeding database..."
-	@go run cmd/api-server/main.go seed
-
-# Docker commands
-docker-build: ## Build docker image
-	@echo "Building docker image..."
-	@docker build -t go-api-server-sample .
-
-docker-up: ## Start docker compose services
-	@echo "Starting docker services..."
-	@docker-compose up -d
-
-docker-down: ## Stop docker compose services
-	@echo "Stopping docker services..."
-	@docker-compose down
-
-docker-logs: ## Show docker logs
-	@docker-compose logs -f
 
 # Development tools
 install-tools: ## Install development tools
@@ -162,20 +130,6 @@ security: ## Run security scan with gosec
 		exit 1; \
 	fi
 
-# Dependency management
-deps: ## Download dependencies
-	@echo "Downloading dependencies..."
-	@go mod download
-
-deps-update: ## Update dependencies
-	@echo "Updating dependencies..."
-	@go get -u ./...
-	@go mod tidy
-
-deps-verify: ## Verify dependencies
-	@echo "Verifying dependencies..."
-	@go mod verify
-
 tidy: ## Tidy up dependencies
 	@echo "Tidying up dependencies..."
 	@go mod tidy
@@ -196,31 +150,8 @@ install-hooks: ## Install git hooks
 	@cp scripts/hooks/* .git/hooks/ 2>/dev/null || echo "No git hooks found"
 	@chmod +x .git/hooks/* 2>/dev/null || true
 
-# Environment setup
-env-example: ## Create example environment file
-	@echo "Creating .env.example..."
-	@echo "# Database Configuration" > .env.example
-	@echo "DB_HOST=localhost" >> .env.example
-	@echo "DB_PORT=5432" >> .env.example
-	@echo "DB_USER=postgres" >> .env.example
-	@echo "DB_PASSWORD=password" >> .env.example
-	@echo "DB_NAME=go_api_server" >> .env.example
-	@echo "DB_SSLMODE=disable" >> .env.example
-	@echo "DB_MAX_IDLE_CONNS=10" >> .env.example
-	@echo "DB_MAX_OPEN_CONNS=100" >> .env.example
-	@echo "DB_CONN_MAX_LIFETIME=1h" >> .env.example
-	@echo "" >> .env.example
-	@echo "# Server Configuration" >> .env.example
-	@echo "SERVER_HOST=localhost" >> .env.example
-	@echo "SERVER_PORT=8080" >> .env.example
-	@echo "" >> .env.example
-	@echo "# Application Configuration" >> .env.example
-	@echo "APP_ENV=development" >> .env.example
-	@echo "LOG_LEVEL=debug" >> .env.example
-	@echo ".env.example created"
-
 # Quick start
-quickstart: env-example docker-up migrate ## Setup development environment
+quickstart: migrate ## Setup development environment
 	@echo "Development environment ready!"
 	@echo "Run 'make run' to start the server"
 
