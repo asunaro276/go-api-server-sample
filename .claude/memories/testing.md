@@ -218,13 +218,6 @@ make test-coverage
 make test-integration
 ```
 
-### 契約テスト
-
-```bash
-# 契約テスト実行
-make test-contract
-```
-
 ### パフォーマンステスト
 
 ```bash

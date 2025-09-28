@@ -52,9 +52,6 @@ make help
 ```bash
 # ローカルビルド
 make build
-
-# Linux向けビルド
-make build-linux
 ```
 
 ### テスト
@@ -68,9 +65,6 @@ make test-coverage
 
 # 統合テスト
 make test-integration
-
-# 契約テスト
-make test-contract
 
 # パフォーマンステスト
 make test-performance
@@ -106,9 +100,6 @@ make migrate
 
 # データベースリセット（開発環境のみ）
 make migrate-reset
-
-# テストデータ投入
-make seed
 ```
 
 ### Docker

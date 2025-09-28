@@ -1,0 +1,429 @@
+openapi: 3.0.3
+info:
+  title: Go API サーバー（ヘルスチェック・CRUD）
+  description: |
+    Clean ArchitectureとDomain-Driven Designの原則に基づいて構築されたGo言語のRESTful APIサーバー。
+    ヘルスチェック機能とコンテンツ管理のCRUD操作を提供し、PostgreSQLデータベースにデータを永続化します。
+    認証・認可機能は含まず、JSON形式でレスポンスを返します。
+  version: 1.0.0
+  contact:
+    name: Go API Server Sample
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: 開発環境サーバー
+
+paths:
+  /health:
+    get:
+      summary: ヘルスチェック
+      description: サーバーとデータベースの稼働状況を確認
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: システム正常
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: システム異常
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/v1/contents:
+    get:
+      summary: コンテンツ一覧取得
+      description: 全コンテンツの一覧を取得（削除済みは除外）
+      operationId: listContents
+      tags:
+        - Contents
+      parameters:
+        - name: content_type
+          in: query
+          description: コンテンツタイプでフィルタリング
+          required: false
+          schema:
+            type: string
+            enum: [article, blog, news, page]
+        - name: author
+          in: query
+          description: 作成者でフィルタリング
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+        - name: limit
+          in: query
+          description: 取得件数の上限
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: 取得開始位置
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: コンテンツ一覧取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentListResponse'
+        '400':
+          description: 不正なリクエストパラメータ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバー内部エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: コンテンツ作成
+      description: 新しいコンテンツを作成
+      operationId: createContent
+      tags:
+        - Contents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContentRequest'
+      responses:
+        '201':
+          description: コンテンツ作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentResponse'
+        '400':
+          description: 不正なリクエストボディ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバー内部エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/contents/{id}:
+    get:
+      summary: コンテンツ詳細取得
+      description: 指定IDのコンテンツ詳細を取得
+      operationId: getContentByID
+      tags:
+        - Contents
+      parameters:
+        - name: id
+          in: path
+          description: コンテンツID
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: コンテンツ詳細取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentResponse'
+        '404':
+          description: 指定されたコンテンツが見つからない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバー内部エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: コンテンツ更新
+      description: 指定IDのコンテンツを更新
+      operationId: updateContent
+      tags:
+        - Contents
+      parameters:
+        - name: id
+          in: path
+          description: コンテンツID
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateContentRequest'
+      responses:
+        '200':
+          description: コンテンツ更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentResponse'
+        '400':
+          description: 不正なリクエストボディ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 指定されたコンテンツが見つからない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバー内部エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: コンテンツ削除
+      description: 指定IDのコンテンツを削除（ソフトデリート）
+      operationId: deleteContent
+      tags:
+        - Contents
+      parameters:
+        - name: id
+          in: path
+          description: コンテンツID
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '204':
+          description: コンテンツ削除成功
+        '404':
+          description: 指定されたコンテンツが見つからない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバー内部エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          description: システム全体の健全性ステータス
+        database:
+          type: string
+          enum: [connected, disconnected]
+          description: データベース接続状況
+        timestamp:
+          type: string
+          format: date-time
+          description: ヘルスチェック実行時刻
+        message:
+          type: string
+          description: 追加のステータス情報
+
+    CreateContentRequest:
+      type: object
+      required:
+        - title
+        - body
+        - content_type
+        - author
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: コンテンツのタイトル
+          example: "サンプル記事のタイトル"
+        body:
+          type: string
+          minLength: 1
+          description: コンテンツの本文
+          example: "これはサンプル記事の本文です。"
+        content_type:
+          type: string
+          enum: [article, blog, news, page]
+          description: コンテンツの種類
+          example: "article"
+        author:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: コンテンツ作成者名
+          example: "山田太郎"
+
+    UpdateContentRequest:
+      type: object
+      required:
+        - title
+        - body
+        - content_type
+        - author
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: コンテンツのタイトル
+          example: "更新されたタイトル"
+        body:
+          type: string
+          minLength: 1
+          description: コンテンツの本文
+          example: "更新された本文です。"
+        content_type:
+          type: string
+          enum: [article, blog, news, page]
+          description: コンテンツの種類
+          example: "blog"
+        author:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: コンテンツ作成者名
+          example: "佐藤花子"
+
+    ContentResponse:
+      type: object
+      required:
+        - id
+        - title
+        - body
+        - content_type
+        - author
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          description: コンテンツの一意識別子
+          example: 123
+        title:
+          type: string
+          description: コンテンツのタイトル
+          example: "サンプル記事のタイトル"
+        body:
+          type: string
+          description: コンテンツの本文
+          example: "これはサンプル記事の本文です。"
+        content_type:
+          type: string
+          enum: [article, blog, news, page]
+          description: コンテンツの種類
+          example: "article"
+        author:
+          type: string
+          description: コンテンツ作成者名
+          example: "山田太郎"
+        created_at:
+          type: string
+          format: date-time
+          description: 作成日時
+          example: "2025-09-28T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: 更新日時
+          example: "2025-09-28T15:30:00Z"
+
+    ContentListResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - limit
+        - offset
+      properties:
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentResponse'
+          description: コンテンツ一覧
+        total:
+          type: integer
+          minimum: 0
+          description: 総件数
+          example: 42
+        limit:
+          type: integer
+          minimum: 1
+          description: 取得上限件数
+          example: 20
+        offset:
+          type: integer
+          minimum: 0
+          description: 取得開始位置
+          example: 0
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          description: HTTPステータスコード
+          example: 400
+        message:
+          type: string
+          description: エラーメッセージ
+          example: "不正なリクエストです"
+        details:
+          type: string
+          description: 詳細エラー情報
+          example: "title フィールドは必須です"
+        timestamp:
+          type: string
+          format: date-time
+          description: エラー発生時刻
+          example: "2025-09-28T15:30:00Z"
+
+tags:
+  - name: Health
+    description: ヘルスチェック関連
+  - name: Contents
+    description: コンテンツ管理関連

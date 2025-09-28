@@ -11,8 +11,7 @@
 │       └── middleware/       # HTTPミドルウェア
 ├── internal/                 # 内部パッケージ
 │   ├── domain/              # ドメイン層
-│   │   ├── entities/        # ドメインエンティティ
-│   │   └── repositories/    # リポジトリインターフェース
+│   │   └── entities/        # ドメインエンティティ
 │   └── infrastructure/      # インフラストラクチャ層
 │       ├── database/        # データベース関連
 │       └── repositories/    # リポジトリ実装
