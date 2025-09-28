@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 表示言語
+ユーザーとのやり取りには日本語を利用してください
+
 ## プロジェクト概要
 
 このプロジェクトは、Clean ArchitectureとDomain-Driven Designの原則に基づいて構築されたGo言語のRESTful APIサーバーです。
