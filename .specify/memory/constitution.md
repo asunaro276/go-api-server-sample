@@ -1,50 +1,89 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report - Constitution Update to v1.0.0
+===========================================
+Version Change: Initial → v1.0.0 (NEW)
+Ratified: 2025-09-28 | Last Amended: 2025-09-28
+
+Core Principles Established:
+- I. Clean Architecture（NON-NEGOTIABLE）: 4層アーキテクチャの厳格な遵守
+- II. テスト駆動開発（TDD）: Test Suites、Testcontainers、モック生成
+- III. 命名規約・ファイル構成: 小文字繋ぎファイル名（スネーク・ケバブケース禁止）、1ユースケース1ファイル
+- IV. Git運用ガイドライン: 機能単位コミット、禁止コマンド遵守
+- V. 依存関係管理: 依存性注入、抽象化による分離
+
+Added Sections:
+- 技術スタック標準
+- 開発ワークフロー
+- ガバナンス
+
+テンプレート更新状況:
+✅ plan-template.mdのConstitution Checkルールと整合済み
+✅ .claude/memories/への参照構造を維持
+✅ tasks-template.mdがTDD原則と互換性確認済み
+✅ spec-template.mdがClean Architecture要件と互換性確認済み
+
+フォローアップTODO:
+- なし - 既存の.claude/memories/コンテンツを使用してすべてのプレースホルダーを解決済み
+-->
+
+# go-api-server-sample Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Clean Architecture（NON-NEGOTIABLE）
+本プロジェクトは4層Clean Architectureを厳格に遵守する。Domain層は他の層に依存せず、依存関係は内側への一方向のみとする。Infrastructure層への依存は抽象化（インターフェース）経由でのみ行う。
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+詳細なアーキテクチャガイドライン：@.claude/memories/dependency.md を参照
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. テスト駆動開発（TDD）
+すべての実装はテスト駆動で行う。testify/suiteを使用したTest Suite構造、リポジトリテストでのTestcontainers利用、mockery v3によるモック生成を標準とする。実装前にテストが書かれ、失敗することを確認してから実装を開始する。
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+詳細なテストガイドライン：@.claude/memories/testing.md を参照
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. 命名規約・ファイル構成
+ファイル名は小文字繋ぎとし、スネークケース（アンダースコア）およびケバブケース（ハイフン区切り）は使用禁止。1ユースケース1ファイルの原則を遵守し、ディレクトリ名の重複を避ける。
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+詳細な命名規約：@.claude/memories/naming.md および @.claude/memories/organization.md を参照
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Git運用ガイドライン
+機能単位での意味のあるコミットを行い、`git add .`や強制プッシュは禁止。コミット前には必ずビルド、テスト、リントが通ることを確認し、適切なコミットメッセージフォーマットを使用する。
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+詳細なGit運用ガイドライン：@.claude/memories/git.md を参照
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. 依存関係管理
+依存性注入パターンを使用し、各層の責務を明確に分離する。UseCase層はDomain層のみに依存し、Controller層はUseCase層経由でビジネスロジックにアクセスする。外部ライブラリとの結合度を最小化する。
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+## 技術スタック標準
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+**必須技術スタック**:
+- 言語: Go 1.24+
+- Webフレームワーク: Gin
+- ORM: GORM
+- データベース: PostgreSQL
+- テスト: testify、testcontainers
+- モック生成: mockery v3
+- リント: golangci-lint
+- 開発ツール: air（ホットリロード）
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**パフォーマンス要件**: APIレスポンス < 200ms p95、メモリ使用量の監視、適切なデータベースインデックス設計
+
+## 開発ワークフロー
+
+**標準実行手順**:
+1. makeコマンドによる開発環境セットアップ（`make quickstart`）
+2. 機能分岐作成（`feature/[機能名]`形式）
+3. TDDサイクル（Red-Green-Refactor）
+4. 段階的コミット（機能単位）
+5. CI/CDパイプライン通過確認（`make ci`）
+
+**品質ゲート**: 全テスト通過、リントエラーゼロ、カバレッジ要件達成、コードレビュー承認
+
+## ガバナンス
+
+**優先順位**: 本憲章がすべての他の慣行に優先する。修正には文書化、承認、移行計画が必要。
+
+**コンプライアンス審査**: すべてのPR/レビューで遵守確認を実施。複雑性は正当化が必要。実行時の開発ガイダンスは CLAUDE.md を使用。
+
+**修正手順**: MINOR変更（新原則追加）またはPATCH変更（明確化・誤字修正）のみ。MAJOR変更（後方互換性のない変更）は避ける。
+
+**Version**: 1.0.0 | **Ratified**: 2025-09-28 | **Last Amended**: 2025-09-28
