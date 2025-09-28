@@ -1,23 +1,23 @@
-# [PROJECT NAME] Development Guidelines
+# [プロジェクト名] 開発ガイドライン
 
-Auto-generated from all feature plans. Last updated: [DATE]
+全ての機能計画から自動生成。最終更新: [日付]
 
-## Active Technologies
-[EXTRACTED FROM ALL PLAN.MD FILES]
+## 使用する技術
+[全てのPLAN.MDファイルから抽出]
 
-## Project Structure
+## プロジェクト構成
 ```
-[ACTUAL STRUCTURE FROM PLANS]
+[計画からの実際の構成]
 ```
 
-## Commands
-[ONLY COMMANDS FOR ACTIVE TECHNOLOGIES]
+## コマンド
+[使用する技術のコマンドのみ]
 
-## Code Style
-[LANGUAGE-SPECIFIC, ONLY FOR LANGUAGES IN USE]
+## コードスタイル
+[言語固有、使用中の言語のみ]
 
-## Recent Changes
-[LAST 3 FEATURES AND WHAT THEY ADDED]
+## 最近の変更
+[直近3つの機能とその追加内容]
 
-<!-- MANUAL ADDITIONS START -->
-<!-- MANUAL ADDITIONS END -->
+<!-- 手動追加開始 -->
+<!-- 手動追加終了 -->
