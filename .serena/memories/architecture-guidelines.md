@@ -20,7 +20,7 @@
 - `valueobjects/` - バリューオブジェクト
 - `repositories/` - リポジトリインターフェース
 
-### 2. UseCase層 (`cmd/api-server/internal/usecase/`)
+### 2. UseCase層 (`cmd/api-server/internal/usecases/`)
 
 **責務**
 - アプリケーションのビジネスロジック
@@ -59,15 +59,3 @@
 **依存関係**
 - UseCase層に依存
 - Infrastructure層への直接依存は避ける
-
-## レイヤー間の依存関係
-
-```
-Controller → UseCase → Domain
-                ↑
-        Infrastructure
-```
-
-- 外側の層から内側の層への依存
-- Infrastructure層への依存はインターフェース経由で抽象化
-- Domain層は他の層に依存しない独立した設計

@@ -17,7 +17,6 @@
 ### レイヤー別命名規則
 
 #### UseCase層（application/）
-- **1ユースケース1ファイル**の原則
 - 動作を表す動詞 + 対象オブジェクト
 - 例：`getuser.go`, `createuser.go`, `updateproduct.go`
 
