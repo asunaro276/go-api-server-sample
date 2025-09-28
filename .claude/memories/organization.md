@@ -6,23 +6,20 @@
 ├── cmd/api-server/           # アプリケーションエントリーポイント
 │   └── internal/             # アプリケーション層
 │       ├── application/      # UseCase層（アプリケーションサービス）
-│       ├── config/           # 設定管理
 │       ├── container/        # 依存性注入コンテナ
 │       ├── controller/       # HTTPコントローラ
-│       ├── middleware/       # HTTPミドルウェア
-│       └── router/           # ルーティング設定
+│       └── middleware/       # HTTPミドルウェア
 ├── internal/                 # 内部パッケージ
 │   ├── domain/              # ドメイン層
 │   │   ├── entities/        # ドメインエンティティ
-│   │   ├── repositories/    # リポジトリインターフェース
-│   │   └── services/        # ドメインサービス
+│   │   └── repositories/    # リポジトリインターフェース
 │   └── infrastructure/      # インフラストラクチャ層
 │       ├── database/        # データベース関連
 │       └── repositories/    # リポジトリ実装
 ├── api/test/                # APIテスト
-│   ├── contract/            # 契約テスト
 │   ├── integration/         # 統合テスト
 │   └── performance/         # パフォーマンステスト
+├── config/                  # 設定管理
 └── pkg/                     # 共有パッケージ
 ```
 
