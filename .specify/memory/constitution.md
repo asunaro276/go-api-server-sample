@@ -1,29 +1,27 @@
 <!--
-Sync Impact Report - Constitution Update to v1.0.0
+Sync Impact Report - Constitution Update to v1.1.0
 ===========================================
-Version Change: Initial → v1.0.0 (NEW)
+Version Change: v1.0.0 → v1.1.0 (MINOR)
 Ratified: 2025-09-28 | Last Amended: 2025-09-28
 
-Core Principles Established:
-- I. Clean Architecture（NON-NEGOTIABLE）: 4層アーキテクチャの厳格な遵守
-- II. テスト駆動開発（TDD）: Test Suites、Testcontainers、モック生成
-- III. 命名規約・ファイル構成: 小文字繋ぎファイル名（スネーク・ケバブケース禁止）、1ユースケース1ファイル
-- IV. Git運用ガイドライン: 機能単位コミット、禁止コマンド遵守
-- V. 依存関係管理: 依存性注入、抽象化による分離
+Added Principles:
+- VI. セキュリティ原則（NEW）: 入力値検証、SQLインジェクション対策、XSS・CSRF対策、データベースセキュリティ、ログ・監査、セキュリティチェックリスト
 
-Added Sections:
-- 技術スタック標準
-- 開発ワークフロー
-- ガバナンス
+Modified Sections:
+- ガバナンス: 情報参照優先順位ガイドラインを追加
+
+Added References:
+- @.claude/memories/security.md - セキュリティガイドラインの詳細
+- @.claude/memories/reference.md - 情報参照先定義
 
 テンプレート更新状況:
 ✅ plan-template.mdのConstitution Checkルールと整合済み
-✅ .claude/memories/への参照構造を維持
+✅ .claude/memories/への参照構造を維持・拡張
 ✅ tasks-template.mdがTDD原則と互換性確認済み
 ✅ spec-template.mdがClean Architecture要件と互換性確認済み
 
 フォローアップTODO:
-- なし - 既存の.claude/memories/コンテンツを使用してすべてのプレースホルダーを解決済み
+- なし - 既存のテンプレート構造と整合性を保持
 -->
 
 # go-api-server-sample Constitution
@@ -52,6 +50,11 @@ Added Sections:
 
 ### V. 依存関係管理
 依存性注入パターンを使用し、各層の責務を明確に分離する。UseCase層はDomain層のみに依存し、Controller層はUseCase層経由でビジネスロジックにアクセスする。外部ライブラリとの結合度を最小化する。
+
+### VI. セキュリティ原則
+すべてのコード作成・編集において、セキュリティ要件を最優先で考慮する。入力値検証はController層で必ず実装し、SQLインジェクション対策としてGORM標準メソッドを使用する。センシティブデータのログ出力は禁止し、適切な暗号化とマスキングを行う。
+
+詳細なセキュリティガイドライン：@.claude/memories/security.md を参照
 
 ## 技術スタック標準
 
@@ -82,8 +85,12 @@ Added Sections:
 
 **優先順位**: 本憲章がすべての他の慣行に優先する。修正には文書化、承認、移行計画が必要。
 
+**情報参照優先順位**: 1) プロジェクト固有ルール（@.claude/memories/）、2) 既存コードベース理解（@.serena/memories/）、3) 技術的ベストプラクティス（context7）の順序で参照する。プロジェクト固有のルールが技術的な一般論より優先される。
+
+詳細な参照先定義：@.claude/memories/reference.md を参照
+
 **コンプライアンス審査**: すべてのPR/レビューで遵守確認を実施。複雑性は正当化が必要。実行時の開発ガイダンスは CLAUDE.md を使用。
 
 **修正手順**: MINOR変更（新原則追加）またはPATCH変更（明確化・誤字修正）のみ。MAJOR変更（後方互換性のない変更）は避ける。
 
-**Version**: 1.0.0 | **Ratified**: 2025-09-28 | **Last Amended**: 2025-09-28
+**Version**: 1.1.0 | **Ratified**: 2025-09-28 | **Last Amended**: 2025-09-28
