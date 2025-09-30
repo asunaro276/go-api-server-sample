@@ -4,11 +4,14 @@ import (
 	"context"
 
 	"go-api-server-sample/internal/domain/entities"
-	"go-api-server-sample/internal/domain/repositories"
 )
 
+type ContentCreator interface {
+	Create(ctx context.Context, content *entities.Content) error
+}
+
 type CreateContentUseCase struct {
-	contentRepo repositories.ContentRepository
+	contentRepo ContentCreator
 }
 
 type CreateContentRequest struct {
@@ -22,7 +25,7 @@ type CreateContentResponse struct {
 	*entities.Content
 }
 
-func NewCreateContentUseCase(contentRepo repositories.ContentRepository) *CreateContentUseCase {
+func NewCreateContentUseCase(contentRepo ContentCreator) *CreateContentUseCase {
 	return &CreateContentUseCase{
 		contentRepo: contentRepo,
 	}

@@ -5,12 +5,16 @@ import (
 	"errors"
 
 	"go-api-server-sample/internal/domain/entities"
-	"go-api-server-sample/internal/domain/repositories"
 	"gorm.io/gorm"
 )
 
+type ContentUpdater interface {
+	GetByID(ctx context.Context, id uint) (*entities.Content, error)
+	Update(ctx context.Context, content *entities.Content) error
+}
+
 type UpdateContentUseCase struct {
-	contentRepo repositories.ContentRepository
+	contentRepo ContentUpdater
 }
 
 type UpdateContentRequest struct {
@@ -25,7 +29,7 @@ type UpdateContentResponse struct {
 	*entities.Content
 }
 
-func NewUpdateContentUseCase(contentRepo repositories.ContentRepository) *UpdateContentUseCase {
+func NewUpdateContentUseCase(contentRepo ContentUpdater) *UpdateContentUseCase {
 	return &UpdateContentUseCase{
 		contentRepo: contentRepo,
 	}

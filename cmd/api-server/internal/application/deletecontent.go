@@ -4,19 +4,24 @@ import (
 	"context"
 	"errors"
 
-	"go-api-server-sample/internal/domain/repositories"
+	"go-api-server-sample/internal/domain/entities"
 	"gorm.io/gorm"
 )
 
+type ContentDeleter interface {
+	GetByID(ctx context.Context, id uint) (*entities.Content, error)
+	Delete(ctx context.Context, id uint) error
+}
+
 type DeleteContentUseCase struct {
-	contentRepo repositories.ContentRepository
+	contentRepo ContentDeleter
 }
 
 type DeleteContentRequest struct {
 	ID uint `uri:"id" binding:"required,min=1"`
 }
 
-func NewDeleteContentUseCase(contentRepo repositories.ContentRepository) *DeleteContentUseCase {
+func NewDeleteContentUseCase(contentRepo ContentDeleter) *DeleteContentUseCase {
 	return &DeleteContentUseCase{
 		contentRepo: contentRepo,
 	}

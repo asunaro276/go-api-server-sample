@@ -5,12 +5,15 @@ import (
 	"errors"
 
 	"go-api-server-sample/internal/domain/entities"
-	"go-api-server-sample/internal/domain/repositories"
 	"gorm.io/gorm"
 )
 
+type ContentGetter interface {
+	GetByID(ctx context.Context, id uint) (*entities.Content, error)
+}
+
 type GetContentUseCase struct {
-	contentRepo repositories.ContentRepository
+	contentRepo ContentGetter
 }
 
 type GetContentRequest struct {
@@ -23,7 +26,7 @@ type GetContentResponse struct {
 
 var ErrContentNotFound = errors.New("指定されたコンテンツが見つかりません")
 
-func NewGetContentUseCase(contentRepo repositories.ContentRepository) *GetContentUseCase {
+func NewGetContentUseCase(contentRepo ContentGetter) *GetContentUseCase {
 	return &GetContentUseCase{
 		contentRepo: contentRepo,
 	}

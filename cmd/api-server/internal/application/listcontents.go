@@ -7,8 +7,12 @@ import (
 	"go-api-server-sample/internal/domain/repositories"
 )
 
+type ContentLister interface {
+	List(ctx context.Context, filters repositories.ContentFilters) ([]*entities.Content, int64, error)
+}
+
 type ListContentsUseCase struct {
-	contentRepo repositories.ContentRepository
+	contentRepo ContentLister
 }
 
 type ListContentsRequest struct {
@@ -25,7 +29,7 @@ type ListContentsResponse struct {
 	Offset   int                 `json:"offset"`
 }
 
-func NewListContentsUseCase(contentRepo repositories.ContentRepository) *ListContentsUseCase {
+func NewListContentsUseCase(contentRepo ContentLister) *ListContentsUseCase {
 	return &ListContentsUseCase{
 		contentRepo: contentRepo,
 	}
