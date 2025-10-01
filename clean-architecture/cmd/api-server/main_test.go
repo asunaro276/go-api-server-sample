@@ -8,11 +8,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"go-api-server-sample/cmd/api-server/internal/container"
+	"go-api-server-sample/internal/infrastructure/database"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"go-api-server-sample/clean-architecture/cmd/api-server/internal/container"
-	"go-api-server-sample/clean-architecture/internal/infrastructure/database"
 	"gorm.io/gorm"
 )
 
@@ -273,4 +274,3 @@ func (suite *ContractTestSuite) TestDeleteContentContract() {
 func TestContractTestSuite(t *testing.T) {
 	suite.Run(t, new(ContractTestSuite))
 }
-

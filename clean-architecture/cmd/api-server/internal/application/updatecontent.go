@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"go-api-server-sample/clean-architecture/internal/domain/entities"
+	"go-api-server-sample/internal/domain/entities"
+
 	"gorm.io/gorm"
 )
 

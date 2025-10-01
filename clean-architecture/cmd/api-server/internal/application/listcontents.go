@@ -3,8 +3,8 @@ package application
 import (
 	"context"
 
-	"go-api-server-sample/clean-architecture/internal/domain/entities"
-	"go-api-server-sample/clean-architecture/internal/domain/repositories"
+	"go-api-server-sample/internal/domain/entities"
+	"go-api-server-sample/internal/domain/repositories"
 )
 
 type ContentLister interface {

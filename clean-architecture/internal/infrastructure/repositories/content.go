@@ -3,8 +3,9 @@ package repositories
 import (
 	"context"
 
-	"go-api-server-sample/clean-architecture/internal/domain/entities"
-	"go-api-server-sample/clean-architecture/internal/domain/repositories"
+	"go-api-server-sample/internal/domain/entities"
+	"go-api-server-sample/internal/domain/repositories"
+
 	"gorm.io/gorm"
 )
 
