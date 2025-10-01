@@ -1,9 +1,9 @@
 package container
 
 import (
-	"go-api-server-sample/cmd/api-server/internal/application"
-	"go-api-server-sample/internal/domain/repositories"
-	infraRepos "go-api-server-sample/internal/infrastructure/repositories"
+	"go-api-server-sample/clean-architecture/cmd/api-server/internal/application"
+	"go-api-server-sample/clean-architecture/internal/domain/repositories"
+	infraRepos "go-api-server-sample/clean-architecture/internal/infrastructure/repositories"
 	"gorm.io/gorm"
 )
 

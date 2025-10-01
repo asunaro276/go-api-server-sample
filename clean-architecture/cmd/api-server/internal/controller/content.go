@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"go-api-server-sample/cmd/api-server/internal/application"
+	"go-api-server-sample/clean-architecture/cmd/api-server/internal/application"
 )
 
 type ContentController struct {

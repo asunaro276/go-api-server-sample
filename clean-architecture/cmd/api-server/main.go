@@ -6,10 +6,10 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"go-api-server-sample/cmd/api-server/internal/container"
-	"go-api-server-sample/cmd/api-server/internal/controller"
-	"go-api-server-sample/cmd/api-server/internal/middleware"
-	"go-api-server-sample/internal/infrastructure/database"
+	"go-api-server-sample/clean-architecture/cmd/api-server/internal/container"
+	"go-api-server-sample/clean-architecture/cmd/api-server/internal/controller"
+	"go-api-server-sample/clean-architecture/cmd/api-server/internal/middleware"
+	"go-api-server-sample/clean-architecture/internal/infrastructure/database"
 )
 
 func main() {
