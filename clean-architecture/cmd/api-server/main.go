@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"go-api-server-sample/cmd/api-server/internal/container"
-	"go-api-server-sample/cmd/api-server/internal/controller"
 	"go-api-server-sample/cmd/api-server/internal/middleware"
 	"go-api-server-sample/internal/infrastructure/database"
 
@@ -73,27 +72,18 @@ func setupRouter(deps *container.Container) *gin.Engine {
 	r.Use(gin.Recovery())
 	r.Use(middleware.CORS())
 
-	healthController := controller.NewHealthController(deps.HealthCheckUseCase)
-	r.GET("/health", healthController.Check)
+	r.GET("/health", deps.HealthAPI.Check)
 
 	v1 := r.Group("/api/v1")
 	v1.Use(middleware.ErrorHandler())
 
-	contentController := controller.NewContentController(
-		deps.CreateContentUseCase,
-		deps.GetContentUseCase,
-		deps.ListContentsUseCase,
-		deps.UpdateContentUseCase,
-		deps.DeleteContentUseCase,
-	)
-
 	contents := v1.Group("/contents")
 	{
-		contents.POST("", contentController.Create)
-		contents.GET("", contentController.List)
-		contents.GET("/:id", contentController.GetByID)
-		contents.PUT("/:id", contentController.Update)
-		contents.DELETE("/:id", contentController.Delete)
+		contents.POST("", deps.ContentAPI.Create)
+		contents.GET("", deps.ContentAPI.List)
+		contents.GET("/:id", deps.ContentAPI.GetByID)
+		contents.PUT("/:id", deps.ContentAPI.Update)
+		contents.DELETE("/:id", deps.ContentAPI.Delete)
 	}
 
 	return r
