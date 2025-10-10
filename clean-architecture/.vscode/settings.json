@@ -9,8 +9,8 @@
     "go.lintOnSave": "package",
     "go.vetOnSave": "package",
     "go.buildTags": "",
-    "go.testFlags": ["-v"],
-    "go.testTimeout": "10s",
+    "go.testFlags": ["-v", "-parallel", "4"],
+    "go.testTimeout": "30s",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
         "source.organizeImports": "explicit"

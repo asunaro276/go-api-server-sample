@@ -1,0 +1,54 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run API Server",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/api-server",
+            "env": {},
+            "args": []
+        },
+        {
+            "name": "Run Current Test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${fileDirname}",
+            "args": [
+                "-v",
+                "-parallel",
+                "4",
+                "-timeout",
+                "10m"
+            ]
+        },
+        {
+            "name": "Run Integration Tests",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/cmd/api-server/test/integration",
+            "args": [
+                "-v",
+                "-parallel",
+                "2",
+                "-timeout",
+                "10m"
+            ]
+        },
+        {
+            "name": "Run Integration Tests (Serial)",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/cmd/api-server/test/integration",
+            "args": [
+                "-v",
+                "-timeout",
+                "10m"
+            ]
+        }
+    ]
+}
