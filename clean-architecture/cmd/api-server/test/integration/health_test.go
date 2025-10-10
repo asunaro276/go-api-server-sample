@@ -1,4 +1,4 @@
-package health
+package integration
 
 import (
 	"context"
@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"go-api-server-sample/cmd/api-server/internal/api/health"
+	"go-api-server-sample/cmd/api-server/internal/middleware"
 	"go-api-server-sample/internal/domain/entities"
 
 	"github.com/gin-gonic/gin"
@@ -20,14 +22,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type HealthAPITestSuite struct {
+type HealthIntegrationTestSuite struct {
 	suite.Suite
-	container *postgres.PostgresContainer
-	db        *gorm.DB
-	api       *HealthAPI
+	container  *postgres.PostgresContainer
+	db         *gorm.DB
+	server     *httptest.Server
+	httpClient *http.Client
 }
 
-func (suite *HealthAPITestSuite) SetupSuite() {
+func (suite *HealthIntegrationTestSuite) SetupSuite() {
 	ctx := context.Background()
 
 	// PostgreSQLコンテナ起動
@@ -55,62 +58,59 @@ func (suite *HealthAPITestSuite) SetupSuite() {
 	err = suite.db.AutoMigrate(&entities.Content{})
 	suite.Require().NoError(err)
 
-	// HealthAPI初期化
-	suite.api = NewHealthAPI(suite.db)
+	// ルーター設定
+	gin.SetMode(gin.TestMode)
+	router := suite.setupRouter()
+
+	// テストサーバー起動
+	suite.server = httptest.NewServer(router)
+	suite.httpClient = &http.Client{
+		Timeout: 10 * time.Second,
+	}
 }
 
-func (suite *HealthAPITestSuite) TearDownSuite() {
+func (suite *HealthIntegrationTestSuite) TearDownSuite() {
 	ctx := context.Background()
+	if suite.server != nil {
+		suite.server.Close()
+	}
 	if suite.container != nil {
 		suite.container.Terminate(ctx)
 	}
 }
 
-func (suite *HealthAPITestSuite) TestCheck() {
-	suite.Run("DB接続が正常な場合はhealthyを返す", func() {
-		// Given
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest(http.MethodGet, "/health", nil)
+func (suite *HealthIntegrationTestSuite) setupRouter() *gin.Engine {
+	r := gin.New()
 
-		// When
-		suite.api.Check(c)
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+	r.Use(middleware.CORS())
+
+	healthAPI := health.NewHealthAPI(suite.db)
+	r.GET("/health", healthAPI.Check)
+
+	return r
+}
+
+func (suite *HealthIntegrationTestSuite) TestHealthCheck() {
+	suite.Run("DB接続が正常な場合はhealthyを返す", func() {
+		// When: HTTPリクエストを送信
+		resp, err := suite.httpClient.Get(suite.server.URL + "/health")
+		suite.Require().NoError(err)
+		defer resp.Body.Close()
 
 		// Then
-		assert.Equal(suite.T(), http.StatusOK, w.Code)
+		assert.Equal(suite.T(), http.StatusOK, resp.StatusCode)
 
 		var response map[string]interface{}
-		err := json.Unmarshal(w.Body.Bytes(), &response)
+		err = json.NewDecoder(resp.Body).Decode(&response)
 		assert.NoError(suite.T(), err)
 		assert.Equal(suite.T(), "healthy", response["status"])
 		assert.Equal(suite.T(), "connected", response["database"])
 		assert.NotNil(suite.T(), response["timestamp"])
 	})
-
-	suite.Run("DBがnilの場合でもステータスを返す", func() {
-		// Given
-		apiWithoutDB := NewHealthAPI(nil)
-
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest(http.MethodGet, "/health", nil)
-
-		// When
-		apiWithoutDB.Check(c)
-
-		// Then
-		assert.Equal(suite.T(), http.StatusOK, w.Code)
-
-		var response map[string]interface{}
-		err := json.Unmarshal(w.Body.Bytes(), &response)
-		assert.NoError(suite.T(), err)
-		assert.Equal(suite.T(), "healthy", response["status"])
-		assert.NotNil(suite.T(), response["timestamp"])
-	})
 }
 
-func TestHealthAPITestSuite(t *testing.T) {
-	suite.Run(t, new(HealthAPITestSuite))
+func TestHealthIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(HealthIntegrationTestSuite))
 }

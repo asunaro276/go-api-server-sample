@@ -1,4 +1,4 @@
-package content
+package integration
 
 import (
 	"bytes"
@@ -9,8 +9,10 @@ import (
 	"testing"
 	"time"
 
+	"go-api-server-sample/cmd/api-server/internal/api/health"
+	"go-api-server-sample/cmd/api-server/internal/container"
+	"go-api-server-sample/cmd/api-server/internal/middleware"
 	"go-api-server-sample/internal/domain/entities"
-	infraRepos "go-api-server-sample/internal/infrastructure/repositories"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -22,14 +24,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type CreateContentTestSuite struct {
+type ContentCreateIntegrationTestSuite struct {
 	suite.Suite
-	container *postgres.PostgresContainer
-	db        *gorm.DB
-	api       *ContentAPI
+	container  *postgres.PostgresContainer
+	db         *gorm.DB
+	server     *httptest.Server
+	httpClient *http.Client
 }
 
-func (suite *CreateContentTestSuite) SetupSuite() {
+func (suite *ContentCreateIntegrationTestSuite) SetupSuite() {
 	ctx := context.Background()
 
 	// PostgreSQLコンテナ起動
@@ -57,30 +60,57 @@ func (suite *CreateContentTestSuite) SetupSuite() {
 	err = suite.db.AutoMigrate(&entities.Content{})
 	suite.Require().NoError(err)
 
-	// ContentAPI初期化（本物のリポジトリを使用）
-	repo := infraRepos.NewContentRepository(suite.db)
-	suite.api = NewContentAPI(repo)
+	// ルーター設定
+	gin.SetMode(gin.TestMode)
+	router := suite.setupRouter()
+
+	// テストサーバー起動
+	suite.server = httptest.NewServer(router)
+	suite.httpClient = &http.Client{
+		Timeout: 10 * time.Second,
+	}
 }
 
-func (suite *CreateContentTestSuite) TearDownSuite() {
+func (suite *ContentCreateIntegrationTestSuite) TearDownSuite() {
 	ctx := context.Background()
+	if suite.server != nil {
+		suite.server.Close()
+	}
 	if suite.container != nil {
 		suite.container.Terminate(ctx)
 	}
 }
 
-func (suite *CreateContentTestSuite) SetupSubTest() {
+func (suite *ContentCreateIntegrationTestSuite) SetupSubTest() {
 	// テストデータクリーンアップ
 	suite.db.Exec("DELETE FROM contents")
 }
 
-func (suite *CreateContentTestSuite) TestCreate() {
+func (suite *ContentCreateIntegrationTestSuite) setupRouter() *gin.Engine {
+	r := gin.New()
+
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+	r.Use(middleware.CORS())
+
+	healthAPI := health.NewHealthAPI(suite.db)
+	r.GET("/health", healthAPI.Check)
+
+	deps := container.NewContainer(suite.db)
+	v1 := r.Group("/api/v1")
+	v1.Use(middleware.ErrorHandler())
+
+	contents := v1.Group("/contents")
+	{
+		contents.POST("", deps.ContentAPI.Create)
+	}
+
+	return r
+}
+
+func (suite *ContentCreateIntegrationTestSuite) TestCreate() {
 	suite.Run("正常にコンテンツを作成できる", func() {
 		// Given
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-
 		reqBody := map[string]string{
 			"title":        "テストタイトル",
 			"body":         "テスト本文",
@@ -88,17 +118,21 @@ func (suite *CreateContentTestSuite) TestCreate() {
 			"author":       "テスト作成者",
 		}
 		jsonBytes, _ := json.Marshal(reqBody)
-		c.Request = httptest.NewRequest(http.MethodPost, "/api/v1/contents", bytes.NewBuffer(jsonBytes))
-		c.Request.Header.Set("Content-Type", "application/json")
 
-		// When
-		suite.api.Create(c)
+		// When: HTTPリクエストを送信
+		resp, err := suite.httpClient.Post(
+			suite.server.URL+"/api/v1/contents",
+			"application/json",
+			bytes.NewBuffer(jsonBytes),
+		)
+		suite.Require().NoError(err)
+		defer resp.Body.Close()
 
 		// Then
-		assert.Equal(suite.T(), http.StatusCreated, w.Code)
+		assert.Equal(suite.T(), http.StatusCreated, resp.StatusCode)
 
 		var response entities.Content
-		err := json.Unmarshal(w.Body.Bytes(), &response)
+		err = json.NewDecoder(resp.Body).Decode(&response)
 		assert.NoError(suite.T(), err)
 		assert.Greater(suite.T(), response.ID, uint(0))
 		assert.Equal(suite.T(), "テストタイトル", response.Title)
@@ -111,10 +145,6 @@ func (suite *CreateContentTestSuite) TestCreate() {
 
 	suite.Run("titleが空の場合はバリデーションエラー", func() {
 		// Given
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-
 		reqBody := map[string]string{
 			"title":        "",
 			"body":         "テスト本文",
@@ -122,17 +152,21 @@ func (suite *CreateContentTestSuite) TestCreate() {
 			"author":       "テスト作成者",
 		}
 		jsonBytes, _ := json.Marshal(reqBody)
-		c.Request = httptest.NewRequest(http.MethodPost, "/api/v1/contents", bytes.NewBuffer(jsonBytes))
-		c.Request.Header.Set("Content-Type", "application/json")
 
 		// When
-		suite.api.Create(c)
+		resp, err := suite.httpClient.Post(
+			suite.server.URL+"/api/v1/contents",
+			"application/json",
+			bytes.NewBuffer(jsonBytes),
+		)
+		suite.Require().NoError(err)
+		defer resp.Body.Close()
 
 		// Then
-		assert.Equal(suite.T(), http.StatusBadRequest, w.Code)
+		assert.Equal(suite.T(), http.StatusBadRequest, resp.StatusCode)
 
 		var response map[string]interface{}
-		err := json.Unmarshal(w.Body.Bytes(), &response)
+		err = json.NewDecoder(resp.Body).Decode(&response)
 		assert.NoError(suite.T(), err)
 		assert.Equal(suite.T(), float64(http.StatusBadRequest), response["code"])
 		assert.Contains(suite.T(), response["message"], "不正なリクエストです")
@@ -140,10 +174,6 @@ func (suite *CreateContentTestSuite) TestCreate() {
 
 	suite.Run("bodyが空の場合はバリデーションエラー", func() {
 		// Given
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-
 		reqBody := map[string]string{
 			"title":        "テストタイトル",
 			"body":         "",
@@ -151,27 +181,27 @@ func (suite *CreateContentTestSuite) TestCreate() {
 			"author":       "テスト作成者",
 		}
 		jsonBytes, _ := json.Marshal(reqBody)
-		c.Request = httptest.NewRequest(http.MethodPost, "/api/v1/contents", bytes.NewBuffer(jsonBytes))
-		c.Request.Header.Set("Content-Type", "application/json")
 
 		// When
-		suite.api.Create(c)
+		resp, err := suite.httpClient.Post(
+			suite.server.URL+"/api/v1/contents",
+			"application/json",
+			bytes.NewBuffer(jsonBytes),
+		)
+		suite.Require().NoError(err)
+		defer resp.Body.Close()
 
 		// Then
-		assert.Equal(suite.T(), http.StatusBadRequest, w.Code)
+		assert.Equal(suite.T(), http.StatusBadRequest, resp.StatusCode)
 
 		var response map[string]interface{}
-		err := json.Unmarshal(w.Body.Bytes(), &response)
+		err = json.NewDecoder(resp.Body).Decode(&response)
 		assert.NoError(suite.T(), err)
 		assert.Equal(suite.T(), float64(http.StatusBadRequest), response["code"])
 	})
 
 	suite.Run("content_typeが不正な値の場合はバリデーションエラー", func() {
 		// Given
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-
 		reqBody := map[string]string{
 			"title":        "テストタイトル",
 			"body":         "テスト本文",
@@ -179,27 +209,27 @@ func (suite *CreateContentTestSuite) TestCreate() {
 			"author":       "テスト作成者",
 		}
 		jsonBytes, _ := json.Marshal(reqBody)
-		c.Request = httptest.NewRequest(http.MethodPost, "/api/v1/contents", bytes.NewBuffer(jsonBytes))
-		c.Request.Header.Set("Content-Type", "application/json")
 
 		// When
-		suite.api.Create(c)
+		resp, err := suite.httpClient.Post(
+			suite.server.URL+"/api/v1/contents",
+			"application/json",
+			bytes.NewBuffer(jsonBytes),
+		)
+		suite.Require().NoError(err)
+		defer resp.Body.Close()
 
 		// Then
-		assert.Equal(suite.T(), http.StatusBadRequest, w.Code)
+		assert.Equal(suite.T(), http.StatusBadRequest, resp.StatusCode)
 
 		var response map[string]interface{}
-		err := json.Unmarshal(w.Body.Bytes(), &response)
+		err = json.NewDecoder(resp.Body).Decode(&response)
 		assert.NoError(suite.T(), err)
 		assert.Equal(suite.T(), float64(http.StatusBadRequest), response["code"])
 	})
 
 	suite.Run("authorが空の場合はバリデーションエラー", func() {
 		// Given
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-
 		reqBody := map[string]string{
 			"title":        "テストタイトル",
 			"body":         "テスト本文",
@@ -207,38 +237,40 @@ func (suite *CreateContentTestSuite) TestCreate() {
 			"author":       "",
 		}
 		jsonBytes, _ := json.Marshal(reqBody)
-		c.Request = httptest.NewRequest(http.MethodPost, "/api/v1/contents", bytes.NewBuffer(jsonBytes))
-		c.Request.Header.Set("Content-Type", "application/json")
 
 		// When
-		suite.api.Create(c)
+		resp, err := suite.httpClient.Post(
+			suite.server.URL+"/api/v1/contents",
+			"application/json",
+			bytes.NewBuffer(jsonBytes),
+		)
+		suite.Require().NoError(err)
+		defer resp.Body.Close()
 
 		// Then
-		assert.Equal(suite.T(), http.StatusBadRequest, w.Code)
+		assert.Equal(suite.T(), http.StatusBadRequest, resp.StatusCode)
 
 		var response map[string]interface{}
-		err := json.Unmarshal(w.Body.Bytes(), &response)
+		err = json.NewDecoder(resp.Body).Decode(&response)
 		assert.NoError(suite.T(), err)
 		assert.Equal(suite.T(), float64(http.StatusBadRequest), response["code"])
 	})
 
 	suite.Run("JSONが不正な場合はバリデーションエラー", func() {
-		// Given
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-
-		c.Request = httptest.NewRequest(http.MethodPost, "/api/v1/contents", bytes.NewBuffer([]byte("invalid json")))
-		c.Request.Header.Set("Content-Type", "application/json")
-
 		// When
-		suite.api.Create(c)
+		resp, err := suite.httpClient.Post(
+			suite.server.URL+"/api/v1/contents",
+			"application/json",
+			bytes.NewBuffer([]byte("invalid json")),
+		)
+		suite.Require().NoError(err)
+		defer resp.Body.Close()
 
 		// Then
-		assert.Equal(suite.T(), http.StatusBadRequest, w.Code)
+		assert.Equal(suite.T(), http.StatusBadRequest, resp.StatusCode)
 	})
 }
 
-func TestCreateContentTestSuite(t *testing.T) {
-	suite.Run(t, new(CreateContentTestSuite))
+func TestContentCreateIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(ContentCreateIntegrationTestSuite))
 }

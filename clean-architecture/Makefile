@@ -1,19 +1,18 @@
-# Makefile for Go API Server Sample
-
 .PHONY: help run dev build test test-coverage test-integration test-performance test-all lint fmt vet check ci migrate migrate-reset docker-up docker-down docker-logs install-tools mock-gen quickstart
 
-# Default target
-help: ## Show this help message
+help:
 	@echo 'Usage: make [target]'
 	@echo ''
 	@echo 'Targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-# Application execution
-run: ## Run application normally
+pre-commit:
+	vet fmt test
+
+run:
 	go run ./cmd/api-server
 
-dev: ## Run application in development mode with hot reload
+dev:
 	air
 
 build: ## Build application
@@ -22,19 +21,17 @@ build: ## Build application
 
 # Testing
 test: ## Run unit tests
-	go test -v ./...
+	go test -parallel 4 -v ./...
 
 test-coverage: ## Run tests with coverage
 	go test -v -race -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 
 test-integration: ## Run integration tests
-	go test -v -tags=integration ./api/test/integration/...
+	go test -v -parallel 2 -timeout 10m ./cmd/api-server/test/integration/...
 
 test-performance: ## Run performance tests
 	go test -v -bench=. ./api/test/performance/...
-
-test-all: test test-integration test-performance ## Run all tests
 
 # Code quality
 lint: ## Run linter
