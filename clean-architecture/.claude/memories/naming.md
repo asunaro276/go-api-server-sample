@@ -15,32 +15,43 @@
 
 ### レイヤー別命名規則
 
-#### UseCase層（application/）
-- 動作を表す動詞 + 対象オブジェクト
-- 例：`getuser.go`, `createuser.go`, `updateproduct.go`
+#### API層（api/）
+
+API層は **リソースごとにディレクトリを作成** し、その中に操作ごとのファイルを配置します。
+
+##### ディレクトリ命名
+- リソース名の単数形または複数形（コンテキストに応じて）
+- 例：`content/`, `health/`, `user/`
+
+##### ファイル命名
+- **リソース構造体定義**: リソース名と同じファイル名
+  - 例：`content.go`, `user.go`
+- **操作ファイル**: 動作を表す動詞
+  - 例：`create.go`, `get.go`, `list.go`, `update.go`, `delete.go`
 
 ✅ **適切な例**
 ```
-usecases/
-├── getuser.go          # ユーザー取得ユースケース
-├── createuser.go       # ユーザー作成ユースケース
-├── updateuser.go       # ユーザー更新ユースケース
-├── deleteuser.go       # ユーザー削除ユースケース
-└── listusers.go        # ユーザー一覧取得ユースケース
+api/
+├── content/
+│   ├── content.go      # API構造体定義
+│   ├── create.go       # コンテンツ作成
+│   ├── get.go          # コンテンツ取得
+│   ├── list.go         # コンテンツ一覧取得
+│   ├── update.go       # コンテンツ更新
+│   └── delete.go       # コンテンツ削除
+└── health/
+    └── check.go        # ヘルスチェック
 ```
 
 ❌ **不適切な例**
 ```
-usecase/
-├── get_user.go                    # スネークケース使用
-├── user_usecase.go               # ディレクトリ名重複
-├── getuserusecase.go             # ディレクトリ名重複
-└── user-service.go               # 役割が曖昧
+api/
+├── content/
+│   ├── content_api.go              # ディレクトリ名重複
+│   ├── create_content.go           # リソース名重複
+│   ├── get-content.go              # ケバブケース使用
+│   └── content_create_handler.go   # 冗長な命名
 ```
-
-#### Controller層（controller/）
-- オブジェクト名のみ
-- 例：`user.go`, `product.go`
 
 #### Domain層（domain/）
 - **entities/**: オブジェクト名の単数形
@@ -54,7 +65,7 @@ usecase/
 
 ### テストファイル命名規則
 - 対象ファイル名 + `_test.go`
-- 例：`getuser_test.go`, `user_test.go`
+- 例：`content_test.go`, `create_test.go`
 
 ## パッケージ命名規約
 
@@ -78,7 +89,8 @@ package Application // ❌ 大文字使用
 import (
     "go-api-server-sample/internal/domain/entities"
     "go-api-server-sample/internal/domain/repositories"
-    "go-api-server-sample/cmd/api-server/internal/application"
+    "go-api-server-sample/cmd/api-server/internal/api/content"
+    "go-api-server-sample/internal/infrastructure/database"
 )
 ```
 
@@ -103,7 +115,7 @@ import (
 ### 必須チェック項目
 1. ファイル名にアンダースコアが含まれていないか
 2. ディレクトリ名とファイル名が重複していないか
-3. 1ユースケース1ファイルの原則が守られているか
+3. API層で1操作1ファイルの原則が守られているか
 4. 適切なレイヤーに配置されているか
 5. パッケージ名が小文字単数形になっているか
 6. Go言語標準の命名規則に従っているか

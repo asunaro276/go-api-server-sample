@@ -8,7 +8,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-このプロジェクトは、Clean ArchitectureとDomain-Driven Designの原則に基づいて構築されたGo言語のRESTful APIサーバーです。
+このプロジェクトは、Clean Architectureの原則に基づいて構築されたシンプルなGo言語のRESTful APIサーバーです。
+
+### アーキテクチャ概要
+
+3層のシンプルな構成を採用しています：
+- **API層**: HTTPリクエストの処理とビジネスロジックの実行
+- **Domain層**: エンティティとリポジトリインターフェースの定義
+- **Infrastructure層**: データベースアクセスなど外部依存の実装
 
 ### レイヤー間依存関係
 @.claude/memories/dependency.md
@@ -146,3 +153,6 @@ go test -bench=. ./internal/domain/entities
 # 環境ファイル作成とDocker起動、マイグレーション実行
 make quickstart
 ```
+
+## 調査と探索
+既存コードの調査を行う際にはSerena MCPを使って効率的に行ってください
