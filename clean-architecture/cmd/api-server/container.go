@@ -1,23 +1,24 @@
-package container
+package main
 
 import (
 	"go-api-server-sample/cmd/api-server/internal/api/content"
 	"go-api-server-sample/cmd/api-server/internal/api/health"
-	"go-api-server-sample/internal/domain/repositories"
-	infraRepos "go-api-server-sample/internal/infrastructure/repositories"
+	"go-api-server-sample/cmd/api-server/internal/infrastructure/repositories"
 
 	"gorm.io/gorm"
 )
 
+// Container は依存性注入コンテナ
 type Container struct {
 	// APIs
 	ContentAPI *content.ContentAPI
 	HealthAPI  *health.HealthAPI
 
 	// Repositories
-	ContentRepository repositories.ContentRepository
+	ContentRepository content.ContentRepository
 }
 
+// NewContainer は新しいContainerインスタンスを作成する
 func NewContainer(db *gorm.DB) *Container {
 	container := &Container{}
 
@@ -28,7 +29,7 @@ func NewContainer(db *gorm.DB) *Container {
 }
 
 func (c *Container) initRepositories(db *gorm.DB) {
-	c.ContentRepository = infraRepos.NewContentRepository(db)
+	c.ContentRepository = repositories.NewContentRepository(db)
 }
 
 func (c *Container) initAPIs(db *gorm.DB) {

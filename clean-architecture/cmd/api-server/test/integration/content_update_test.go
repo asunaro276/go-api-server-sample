@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"go-api-server-sample/cmd/api-server/internal/api/health"
-	"go-api-server-sample/cmd/api-server/internal/container"
+	"go-api-server-sample/cmd/api-server/internal/api/content"
+	"go-api-server-sample/cmd/api-server/internal/infrastructure/repositories"
 	"go-api-server-sample/cmd/api-server/internal/middleware"
 	"go-api-server-sample/internal/domain/entities"
 
@@ -97,14 +98,16 @@ func (suite *ContentUpdateIntegrationTestSuite) setupRouter() *gin.Engine {
 	healthAPI := health.NewHealthAPI(suite.db)
 	r.GET("/health", healthAPI.Check)
 
-	deps := container.NewContainer(suite.db)
+	// リポジトリとAPIを直接初期化
+	contentRepo := repositories.NewContentRepository(suite.db)
+	contentAPI := content.NewContentAPI(contentRepo)
 	v1 := r.Group("/api/v1")
 	v1.Use(middleware.ErrorHandler())
 
 	contents := v1.Group("/contents")
 	{
-		contents.POST("", deps.ContentAPI.Create)
-		contents.PUT("/:id", deps.ContentAPI.Update)
+		contents.POST("", contentAPI.Create)
+		contents.PUT("/:id", contentAPI.Update)
 	}
 
 	return r

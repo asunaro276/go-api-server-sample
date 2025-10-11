@@ -3,8 +3,8 @@ package repositories
 import (
 	"context"
 
+	"go-api-server-sample/cmd/api-server/internal/api/content"
 	"go-api-server-sample/internal/domain/entities"
-	"go-api-server-sample/internal/domain/repositories"
 
 	"gorm.io/gorm"
 )
@@ -13,7 +13,7 @@ type contentRepository struct {
 	db *gorm.DB
 }
 
-func NewContentRepository(db *gorm.DB) repositories.ContentRepository {
+func NewContentRepository(db *gorm.DB) content.ContentRepository {
 	return &contentRepository{
 		db: db,
 	}
@@ -32,7 +32,7 @@ func (r *contentRepository) GetByID(ctx context.Context, id uint) (*entities.Con
 	return &content, nil
 }
 
-func (r *contentRepository) List(ctx context.Context, filters repositories.ContentFilters) ([]*entities.Content, int64, error) {
+func (r *contentRepository) List(ctx context.Context, filters content.ContentFilters) ([]*entities.Content, int64, error) {
 	var contents []*entities.Content
 	var total int64
 

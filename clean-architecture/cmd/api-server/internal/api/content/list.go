@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"go-api-server-sample/internal/domain/entities"
-	"go-api-server-sample/internal/domain/repositories"
 
 	"github.com/gin-gonic/gin"
 )
@@ -38,7 +37,7 @@ func (api *ContentAPI) List(c *gin.Context) {
 	}
 
 	// フィルタ構築
-	filters := repositories.NewContentFilters()
+	filters := NewContentFilters()
 
 	if req.ContentType != nil {
 		filters.ContentType = req.ContentType

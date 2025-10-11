@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"go-api-server-sample/cmd/api-server/internal/container"
 	"go-api-server-sample/cmd/api-server/internal/middleware"
 	"go-api-server-sample/internal/infrastructure/database"
 
@@ -44,7 +43,7 @@ func main() {
 		log.Fatal("マイグレーション実行に失敗しました:", err)
 	}
 
-	dependencyContainer := container.NewContainer(db)
+	dependencyContainer := NewContainer(db)
 
 	router := setupRouter(dependencyContainer)
 
@@ -59,7 +58,7 @@ func main() {
 	}
 }
 
-func setupRouter(deps *container.Container) *gin.Engine {
+func setupRouter(deps *Container) *gin.Engine {
 	ginMode := os.Getenv("GIN_MODE")
 	if ginMode == "" {
 		ginMode = gin.ReleaseMode

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"go-api-server-sample/cmd/api-server/internal/api/content"
 	"go-api-server-sample/internal/domain/entities"
-	"go-api-server-sample/internal/domain/repositories"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -22,7 +22,7 @@ type ContentRepositoryTestSuite struct {
 	suite.Suite
 	container *postgres.PostgresContainer
 	db        *gorm.DB
-	repo      repositories.ContentRepository
+	repo      content.ContentRepository
 }
 
 func (suite *ContentRepositoryTestSuite) SetupSuite() {
@@ -138,7 +138,7 @@ func (suite *ContentRepositoryTestSuite) TestList() {
 		}
 
 		// 取得テスト
-		filters := repositories.NewContentFilters()
+		filters := content.NewContentFilters()
 		result, total, err := suite.repo.List(ctx, filters)
 
 		assert.NoError(suite.T(), err)
@@ -171,7 +171,7 @@ func (suite *ContentRepositoryTestSuite) TestList() {
 		}
 
 		// articleタイプでフィルタリング
-		filters := repositories.NewContentFilters()
+		filters := content.NewContentFilters()
 		articleType := "article"
 		filters.ContentType = &articleType
 
@@ -210,7 +210,7 @@ func (suite *ContentRepositoryTestSuite) TestList() {
 		}
 
 		// 作成者Aでフィルタリング
-		filters := repositories.NewContentFilters()
+		filters := content.NewContentFilters()
 		author := "作成者A"
 		filters.Author = &author
 
@@ -240,7 +240,7 @@ func (suite *ContentRepositoryTestSuite) TestList() {
 		}
 
 		// 最初の2件取得
-		filters := repositories.NewContentFilters()
+		filters := content.NewContentFilters()
 		filters.Limit = 2
 		filters.Offset = 0
 
