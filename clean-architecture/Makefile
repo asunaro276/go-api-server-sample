@@ -31,7 +31,9 @@ test-integration: ## Run integration tests
 	go test -v -parallel 2 -timeout 10m ./cmd/api-server/test/integration/...
 
 test-performance: ## Run performance tests
-	go test -v -bench=. ./api/test/performance/...
+	go test -bench=. -benchmem -benchtime=100x ./cmd/api-server/test/performance/...
+
+test-all: test test-integration test-performance ## Run all tests
 
 # Code quality
 lint: ## Run linter
