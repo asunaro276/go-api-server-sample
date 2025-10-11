@@ -18,8 +18,6 @@
             "program": "${fileDirname}",
             "args": [
                 "-v",
-                "-parallel",
-                "4",
                 "-timeout",
                 "10m"
             ]
