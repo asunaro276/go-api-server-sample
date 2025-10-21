@@ -13,7 +13,7 @@ description: Git操作に関する包括的なガイド。ユーザーがブラ�
 
 ### 基本的なワークフロー
 
-1. **変更をステージング**: `git add <file>` または `git add .`
+1. **変更をステージング**: `git add <file>`
 2. **変更をコミット**: `git commit -m "commit message"`
 3. **リモートにプッシュ**: `git push -u origin <branch-name>`
 
@@ -28,10 +28,10 @@ description: Git操作に関する包括的なガイド。ユーザーがブラ�
 git branch <branch-name>
 
 # ブランチに切り替え
-git checkout <branch-name>
+git switch <branch-name>
 
 # ブランチを作成して切り替え（ワンステップ）
-git checkout -b <branch-name>
+git switch -c <branch-name>
 ```
 
 #### ブランチの確認
@@ -67,9 +67,6 @@ git push origin --delete <branch-name>
 ```bash
 # 変更をステージング
 git add <file>
-
-# すべての変更をステージング
-git add .
 
 # コミットメッセージ付きでコミット
 git commit -m "commit message"
@@ -289,7 +286,7 @@ git stash drop
 ### ワークフロー
 
 1. **作業前に最新状態に**: `git pull origin <branch-name>`
-2. **頻繁にコミット**: 小さな論理的な単位でコミット
+2. **頻繁にコミット**: 小さな論理的な単位でコミット（`git add .`は使用不可）
 3. **プッシュ前に確認**: `git log` で変更内容を確認
 4. **ブランチで作業**: mainブランチに直接コミットしない
 5. **定期的にプッシュ**: 作業を失わないように定期的にリモートにプッシュ
