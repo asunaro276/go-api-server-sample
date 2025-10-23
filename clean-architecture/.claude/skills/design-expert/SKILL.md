@@ -45,290 +45,112 @@ description: ソフトウェア設計に関する包括的なガイド。設計�
 #### 生成パターン（Creational Patterns）
 
 **Singleton Pattern**
-```go
-// スレッドセーフなSingleton実装
-type DatabaseConnection struct {
-    conn *sql.DB
-}
-
-var (
-    instance *DatabaseConnection
-    once     sync.Once
-)
-
-func GetInstance() *DatabaseConnection {
-    once.Do(func() {
-        instance = &DatabaseConnection{
-            conn: initConnection(),
-        }
-    })
-    return instance
-}
-```
+- 目的：クラスのインスタンスが1つだけ存在することを保証する
+- 使用場面：データベース接続、設定管理、ログシステムなど
+- 注意点：グローバル状態を作るため、テストが困難になる可能性がある
 
 **Factory Pattern**
-```go
-// インターフェースベースのFactory
-type UserRepository interface {
-    Create(user *User) error
-    FindByID(id string) (*User, error)
-}
-
-type RepositoryFactory struct{}
-
-func (f *RepositoryFactory) CreateUserRepository(dbType string) UserRepository {
-    switch dbType {
-    case "postgres":
-        return NewPostgresUserRepository()
-    case "mongodb":
-        return NewMongoUserRepository()
-    default:
-        return NewInMemoryUserRepository()
-    }
-}
-```
+- 目的：オブジェクト生成のロジックをカプセル化する
+- 使用場面：データベースの種類に応じたリポジトリの生成、ファイル形式に応じたパーサーの生成
+- 利点：インターフェースを通じてオブジェクトを作成し、具体的な実装を隠蔽できる
 
 **Builder Pattern**
-```go
-// 複雑なオブジェクト構築のためのBuilder
-type RequestBuilder struct {
-    request *http.Request
-}
+- 目的：複雑なオブジェクトの構築過程を段階的に行う
+- 使用場面：多数のパラメータを持つオブジェクトの生成、設定オブジェクトの構築
+- 利点：可読性の向上、必須パラメータと任意パラメータの明確化
 
-func NewRequestBuilder() *RequestBuilder {
-    return &RequestBuilder{request: &http.Request{}}
-}
-
-func (b *RequestBuilder) WithMethod(method string) *RequestBuilder {
-    b.request.Method = method
-    return b
-}
-
-func (b *RequestBuilder) WithURL(url string) *RequestBuilder {
-    b.request.URL, _ = neturl.Parse(url)
-    return b
-}
-
-func (b *RequestBuilder) Build() *http.Request {
-    return b.request
-}
-```
+**Prototype Pattern**
+- 目的：既存のオブジェクトをクローンして新しいオブジェクトを作成する
+- 使用場面：オブジェクトの初期化コストが高い場合、テンプレートベースの生成
 
 #### 構造パターン（Structural Patterns）
 
 **Adapter Pattern**
-```go
-// 外部ライブラリを内部インターフェースに適合させる
-type Logger interface {
-    Info(msg string)
-    Error(msg string)
-}
-
-type ZapLoggerAdapter struct {
-    zapLogger *zap.Logger
-}
-
-func (a *ZapLoggerAdapter) Info(msg string) {
-    a.zapLogger.Info(msg)
-}
-
-func (a *ZapLoggerAdapter) Error(msg string) {
-    a.zapLogger.Error(msg)
-}
-```
+- 目的：互換性のないインターフェースを持つクラスを一緒に動作させる
+- 使用場面：外部ライブラリを内部インターフェースに適合させる、レガシーシステムとの統合
+- 利点：既存のコードを変更せずに新しいインターフェースを導入できる
 
 **Decorator Pattern**
-```go
-// 機能を動的に追加
-type Handler interface {
-    Handle(ctx context.Context) error
-}
+- 目的：オブジェクトに動的に新しい責任を追加する
+- 使用場面：ロギング、キャッシング、認証、暗号化などの横断的関心事の追加
+- 利点：継承を使わずに機能を拡張できる、複数のデコレーターを組み合わせられる
 
-type LoggingDecorator struct {
-    handler Handler
-    logger  Logger
-}
+**Facade Pattern**
+- 目的：複雑なサブシステムに対してシンプルなインターフェースを提供する
+- 使用場面：複雑なライブラリやフレームワークのラッパー、マイクロサービスの統合API
+- 利点：サブシステムの複雑さを隠蔽し、使いやすいインターフェースを提供
 
-func (d *LoggingDecorator) Handle(ctx context.Context) error {
-    d.logger.Info("処理開始")
-    err := d.handler.Handle(ctx)
-    if err != nil {
-        d.logger.Error("処理失敗")
-    }
-    return err
-}
-```
+**Proxy Pattern**
+- 目的：他のオブジェクトへのアクセスを制御する代理オブジェクトを提供する
+- 使用場面：遅延ロード、アクセス制御、ログ記録、キャッシング
+- 種類：仮想プロキシ、保護プロキシ、リモートプロキシ
 
 #### 振る舞いパターン（Behavioral Patterns）
 
 **Strategy Pattern**
-```go
-// アルゴリズムの切り替えを可能にする
-type PaymentStrategy interface {
-    Pay(amount float64) error
-}
-
-type CreditCardPayment struct{}
-func (c *CreditCardPayment) Pay(amount float64) error { /* ... */ }
-
-type PayPalPayment struct{}
-func (p *PayPalPayment) Pay(amount float64) error { /* ... */ }
-
-type PaymentProcessor struct {
-    strategy PaymentStrategy
-}
-
-func (p *PaymentProcessor) SetStrategy(strategy PaymentStrategy) {
-    p.strategy = strategy
-}
-
-func (p *PaymentProcessor) ProcessPayment(amount float64) error {
-    return p.strategy.Pay(amount)
-}
-```
+- 目的：アルゴリズムのファミリーを定義し、それぞれをカプセル化して交換可能にする
+- 使用場面：支払い方法の選択、ソートアルゴリズムの切り替え、バリデーション戦略
+- 利点：実行時にアルゴリズムを切り替えられる、条件分岐を削減できる
 
 **Observer Pattern**
-```go
-// イベント駆動アーキテクチャの基礎
-type Observer interface {
-    Update(event Event)
-}
+- 目的：1対多の依存関係を定義し、状態変化を自動的に通知する
+- 使用場面：イベント駆動アーキテクチャ、MVC/MVVMパターン、リアルタイム通知
+- 利点：疎結合な通知メカニズム、拡張性の高いイベント処理
 
-type Subject struct {
-    observers []Observer
-}
+**Command Pattern**
+- 目的：リクエストをオブジェクトとしてカプセル化する
+- 使用場面：アンドゥ/リドゥ機能、タスクキュー、トランザクション処理
+- 利点：リクエストのパラメータ化、ログ記録、遅延実行
 
-func (s *Subject) Attach(observer Observer) {
-    s.observers = append(s.observers, observer)
-}
-
-func (s *Subject) Notify(event Event) {
-    for _, observer := range s.observers {
-        observer.Update(event)
-    }
-}
-```
+**Template Method Pattern**
+- 目的：アルゴリズムの骨格を定義し、サブクラスで具体的な手順を実装する
+- 使用場面：共通のワークフローに対する異なる実装、フレームワーク設計
 
 ### 2. アーキテクチャパターン
 
 #### クリーンアーキテクチャ
 
+**主要原則**
+1. フレームワーク独立性：フレームワークに依存しない
+2. テスト可能性：ビジネスルールはUIやDBなしでテスト可能
+3. UI独立性：UIを変更してもビジネスルールは影響を受けない
+4. データベース独立性：データベースを簡単に置き換えられる
+5. 外部エージェント独立性：ビジネスルールは外部世界について何も知らない
+
 **レイヤー構造**
 ```
-clean-architecture/
-├── domain/              # エンティティとビジネスロジック
-│   ├── entity/         # ドメインエンティティ
-│   ├── repository/     # リポジトリインターフェース
-│   └── service/        # ドメインサービス
-├── usecase/            # ユースケース層（アプリケーションロジック）
-│   ├── interactor/     # ビジネスロジックの実装
-│   └── port/           # 入出力ポート
-├── interface/          # インターフェース層
-│   ├── handler/        # HTTPハンドラー
-│   ├── presenter/      # プレゼンター
-│   └── repository/     # リポジトリ実装
-└── infrastructure/     # インフラストラクチャ層
-    ├── database/       # データベース接続
-    ├── external/       # 外部API
-    └── config/         # 設定
+infrastructure/     # インフラストラクチャ層
+    ↓ 依存
+interface/         # インターフェースアダプター層
+    ↓ 依存
+usecase/          # アプリケーションビジネスルール層
+    ↓ 依存
+domain/           # エンタープライズビジネスルール層
 ```
 
-**依存性の方向**
-```
-infrastructure → interface → usecase → domain
-                                         ↑
-                                    すべてがこの方向に依存
-```
+**依存性の方向**：外側のレイヤーから内側のレイヤーへの一方向のみ
 
-**実装例**
-```go
-// domain/entity/user.go
-type User struct {
-    ID        string
-    Email     string
-    CreatedAt time.Time
-}
-
-// domain/repository/user_repository.go
-type UserRepository interface {
-    Create(ctx context.Context, user *User) error
-    FindByID(ctx context.Context, id string) (*User, error)
-}
-
-// usecase/interactor/user_interactor.go
-type UserInteractor struct {
-    userRepo repository.UserRepository
-}
-
-func (i *UserInteractor) CreateUser(ctx context.Context, email string) (*User, error) {
-    user := &User{
-        ID:        generateID(),
-        Email:     email,
-        CreatedAt: time.Now(),
-    }
-    if err := i.userRepo.Create(ctx, user); err != nil {
-        return nil, err
-    }
-    return user, nil
-}
-
-// interface/repository/postgres_user_repository.go
-type PostgresUserRepository struct {
-    db *sql.DB
-}
-
-func (r *PostgresUserRepository) Create(ctx context.Context, user *User) error {
-    // データベース実装
-}
-```
+**レイヤーの責務**
+- **Domain層**：エンティティ、値オブジェクト、ドメインサービス、リポジトリインターフェース
+- **UseCase層**：ユースケース、アプリケーションサービス、入出力ポート
+- **Interface層**：コントローラー、プレゼンター、ゲートウェイ、リポジトリ実装
+- **Infrastructure層**：フレームワーク、データベース、外部API、設定
 
 #### ヘキサゴナルアーキテクチャ（ポート&アダプター）
 
-**原則**
-- アプリケーションコアは外部依存から独立
-- ポート：アプリケーションの境界を定義するインターフェース
-- アダプター：外部システムとポートをつなぐ実装
+**主要概念**
+- **アプリケーションコア**：ビジネスロジックを含む、外部依存から独立
+- **ポート**：アプリケーションの境界を定義するインターフェース
+  - インバウンドポート：外部からアプリケーションへの入力（ユースケース）
+  - アウトバウンドポート：アプリケーションから外部への出力（リポジトリ、外部サービス）
+- **アダプター**：ポートの具体的な実装
+  - プライマリアダプター：アプリケーションを駆動する（HTTP、CLI、gRPC）
+  - セカンダリアダプター：アプリケーションによって駆動される（DB、メール、キュー）
 
-**実装例**
-```go
-// ポート（インバウンド）
-type UserService interface {
-    RegisterUser(email string) error
-}
-
-// ポート（アウトバウンド）
-type UserStore interface {
-    Save(user User) error
-}
-
-// アプリケーションコア
-type UserServiceImpl struct {
-    store UserStore
-}
-
-func (s *UserServiceImpl) RegisterUser(email string) error {
-    user := User{Email: email}
-    return s.store.Save(user)
-}
-
-// アダプター（インバウンド - HTTP）
-type HTTPAdapter struct {
-    service UserService
-}
-
-func (h *HTTPAdapter) HandleRegister(w http.ResponseWriter, r *http.Request) {
-    // HTTPリクエストをサービスコールに変換
-}
-
-// アダプター（アウトバウンド - PostgreSQL）
-type PostgreSQLAdapter struct {
-    db *sql.DB
-}
-
-func (p *PostgreSQLAdapter) Save(user User) error {
-    // データベース保存処理
-}
-```
+**利点**
+- ビジネスロジックの独立性
+- テスト容易性（モックアダプターの使用）
+- 技術スタックの変更が容易
 
 #### レイヤードアーキテクチャ
 
@@ -343,336 +165,130 @@ func (p *PostgreSQLAdapter) Save(user User) error {
     データベース
 ```
 
+**特徴**
+- シンプルで理解しやすい
+- 各レイヤーが明確な責任を持つ
+- 依存の方向が明確（上から下へ）
+
+**課題**
+- ビジネスロジックがデータベースに依存しやすい
+- 横断的関心事の扱いが難しい
+
+#### マイクロサービスアーキテクチャ
+
+**主要原則**
+1. 単一責任：各サービスは1つのビジネス機能を担当
+2. 自律性：独立してデプロイ・スケール可能
+3. 分散データ：各サービスは独自のデータベースを持つ
+4. 障害の分離：1つのサービスの障害が他に波及しない
+5. 技術の多様性：サービスごとに異なる技術スタックを選択可能
+
+**設計パターン**
+- API Gateway：クライアントとサービス群の間の単一エントリポイント
+- Service Discovery：サービスの動的な検出と登録
+- Circuit Breaker：障害の連鎖を防ぐ
+- Saga Pattern：分散トランザクション管理
+- CQRS：読み取りと書き込みの分離
+
+#### イベント駆動アーキテクチャ
+
+**主要概念**
+- イベント：システムの状態変化を表す
+- イベントプロデューサー：イベントを生成するコンポーネント
+- イベントコンシューマー：イベントを受け取って処理するコンポーネント
+- イベントチャネル：イベントの伝達経路
+
+**パターン**
+- Event Sourcing：すべての状態変化をイベントとして記録
+- CQRS：コマンドとクエリを分離
+- Pub/Sub：パブリッシュ/サブスクライブパターン
+
 ### 3. 設計原則
 
 #### SOLID原則
 
 **S - Single Responsibility Principle（単一責任の原則）**
-```go
-// 悪い例：複数の責任を持つ
-type UserManager struct{}
-
-func (m *UserManager) CreateUser(user User) error { /* ... */ }
-func (m *UserManager) SendWelcomeEmail(user User) error { /* ... */ }
-func (m *UserManager) LogActivity(activity string) error { /* ... */ }
-
-// 良い例：責任を分離
-type UserRepository struct{}
-func (r *UserRepository) Create(user User) error { /* ... */ }
-
-type EmailService struct{}
-func (s *EmailService) SendWelcome(user User) error { /* ... */ }
-
-type ActivityLogger struct{}
-func (l *ActivityLogger) Log(activity string) error { /* ... */ }
-```
+- 定義：クラスやモジュールは、変更する理由を1つだけ持つべき
+- 利点：保守性の向上、テスト容易性、再利用性
+- 判断基準：「このコンポーネントを変更する理由は何か？」が複数ある場合は分割を検討
 
 **O - Open/Closed Principle（開放閉鎖の原則）**
-```go
-// インターフェースを使って拡張可能に
-type PaymentProcessor interface {
-    Process(amount float64) error
-}
-
-type PaymentService struct {
-    processors []PaymentProcessor
-}
-
-func (s *PaymentService) AddProcessor(p PaymentProcessor) {
-    s.processors = append(s.processors, p)
-}
-
-// 新しいプロセッサを追加しても既存コードは変更不要
-type BitcoinProcessor struct{}
-func (b *BitcoinProcessor) Process(amount float64) error { /* ... */ }
-```
+- 定義：ソフトウェアエンティティは拡張に対して開いていて、修正に対して閉じているべき
+- 実現方法：インターフェース、抽象クラス、依存性注入
+- 利点：既存コードを変更せずに新機能を追加できる
 
 **L - Liskov Substitution Principle（リスコフの置換原則）**
-```go
-// 基底インターフェース
-type Storage interface {
-    Save(key string, value []byte) error
-    Load(key string) ([]byte, error)
-}
-
-// どの実装も同じ契約を守る
-type MemoryStorage struct{}
-type FileStorage struct{}
-type S3Storage struct{}
-
-// すべてStorage型として置換可能
-func ProcessData(storage Storage, key string, data []byte) error {
-    return storage.Save(key, data)
-}
-```
+- 定義：派生型は、その基本型と置換可能でなければならない
+- 意味：インターフェースの契約を守る必要がある
+- 違反例：サブタイプが親タイプの前提条件を強化したり、事後条件を弱化したりする
 
 **I - Interface Segregation Principle（インターフェース分離の原則）**
-```go
-// 悪い例：大きすぎるインターフェース
-type Repository interface {
-    Create(entity Entity) error
-    Read(id string) (Entity, error)
-    Update(entity Entity) error
-    Delete(id string) error
-    Search(query string) ([]Entity, error)
-    Export(format string) ([]byte, error)
-}
-
-// 良い例：必要な機能だけのインターフェース
-type Reader interface {
-    Read(id string) (Entity, error)
-}
-
-type Writer interface {
-    Create(entity Entity) error
-    Update(entity Entity) error
-}
-
-type Searcher interface {
-    Search(query string) ([]Entity, error)
-}
-```
+- 定義：クライアントは、使用しないメソッドへの依存を強制されるべきではない
+- 実践：大きなインターフェースを小さく、焦点を絞ったインターフェースに分割
+- 利点：不要な依存の削減、柔軟性の向上
 
 **D - Dependency Inversion Principle（依存性逆転の原則）**
-```go
-// 悪い例：具体実装に依存
-type UserService struct {
-    db *PostgresDB  // 具体的な実装に依存
-}
-
-// 良い例：抽象に依存
-type UserService struct {
-    repo UserRepository  // インターフェースに依存
-}
-
-type UserRepository interface {
-    Save(user User) error
-}
-
-// 実装は差し替え可能
-type PostgresUserRepository struct{}
-type MongoUserRepository struct{}
-```
+- 定義：上位モジュールは下位モジュールに依存してはならない。両方とも抽象に依存すべき
+- 実現方法：インターフェースへの依存、依存性注入
+- 利点：テスト容易性、柔軟性、疎結合
 
 #### DRY原則（Don't Repeat Yourself）
 
-```go
-// 悪い例：重複コード
-func (s *Service) CreateUser(user User) error {
-    if user.Email == "" {
-        return errors.New("email is required")
-    }
-    if !strings.Contains(user.Email, "@") {
-        return errors.New("invalid email")
-    }
-    // ...
-}
-
-func (s *Service) UpdateUser(user User) error {
-    if user.Email == "" {
-        return errors.New("email is required")
-    }
-    if !strings.Contains(user.Email, "@") {
-        return errors.New("invalid email")
-    }
-    // ...
-}
-
-// 良い例：バリデーションを共通化
-func validateEmail(email string) error {
-    if email == "" {
-        return errors.New("email is required")
-    }
-    if !strings.Contains(email, "@") {
-        return errors.New("invalid email")
-    }
-    return nil
-}
-
-func (s *Service) CreateUser(user User) error {
-    if err := validateEmail(user.Email); err != nil {
-        return err
-    }
-    // ...
-}
-```
+- 定義：同じ知識や意図をシステム内で重複させない
+- 適用範囲：コード、データ、ドキュメント
+- 注意点：偶然の重複と本質的な重複を区別する
 
 #### KISS原則（Keep It Simple, Stupid）
 
-```go
-// 悪い例：過度に複雑
-func (s *Service) ProcessData(data interface{}) (interface{}, error) {
-    switch v := data.(type) {
-    case map[string]interface{}:
-        // 複雑な処理...
-    case []interface{}:
-        // さらに複雑な処理...
-    default:
-        // ...
-    }
-}
-
-// 良い例：シンプルで明確
-func (s *Service) ProcessUser(user User) (*ProcessedUser, error) {
-    // 明確な入力と出力
-}
-
-func (s *Service) ProcessUsers(users []User) ([]*ProcessedUser, error) {
-    // 明確な入力と出力
-}
-```
+- 定義：可能な限りシンプルに保つ
+- 実践：不要な複雑さを避ける、明確で読みやすいコードを書く
+- バランス：シンプルさと拡張性のトレードオフを考慮
 
 #### YAGNI原則（You Aren't Gonna Need It）
 
-今必要でない機能は実装しない。将来必要になるかもしれない機能のための過度な抽象化を避ける。
-
-```go
-// 悪い例：現在不要な機能を先に実装
-type UserRepository interface {
-    Create(user User) error
-    Read(id string) (User, error)
-    Update(user User) error
-    Delete(id string) error
-    BulkCreate(users []User) error        // まだ不要
-    Archive(id string) error               // まだ不要
-    Restore(id string) error               // まだ不要
-    ExportToCSV() ([]byte, error)         // まだ不要
-}
-
-// 良い例：現在必要な機能のみ
-type UserRepository interface {
-    Create(user User) error
-    Read(id string) (User, error)
-}
-
-// 必要になったら追加
-```
+- 定義：今必要でない機能は実装しない
+- 理由：不要な複雑さの回避、開発時間の削減
+- 注意点：将来の拡張性とのバランスを取る
 
 ### 4. システム設計
 
 #### スケーラビリティパターン
 
-**水平スケーリング**
-```go
-// ステートレスなサービス設計
-type APIHandler struct {
-    db    Database      // 共有状態
-    cache CacheService  // 共有キャッシュ
-}
-
-// インスタンス間で状態を共有しない
-func (h *APIHandler) HandleRequest(w http.ResponseWriter, r *http.Request) {
-    // リクエスト毎に独立した処理
-}
-```
+**水平スケーリング vs 垂直スケーリング**
+- 水平：サーバー台数を増やす（スケールアウト）
+- 垂直：サーバーのスペックを上げる（スケールアップ）
+- 推奨：ステートレスなアプリケーション設計で水平スケーリングを可能にする
 
 **キャッシング戦略**
-```go
-// Cache-Aside Pattern
-func (s *Service) GetUser(ctx context.Context, id string) (*User, error) {
-    // 1. キャッシュを確認
-    if user, err := s.cache.Get(ctx, id); err == nil {
-        return user, nil
-    }
+- Cache-Aside：アプリケーションがキャッシュを管理
+- Read-Through：キャッシュがデータソースから自動読み込み
+- Write-Through：書き込み時にキャッシュとデータソースを同時更新
+- Write-Behind：書き込みを非同期でデータソースに反映
 
-    // 2. キャッシュミス時はDBから取得
-    user, err := s.db.FindByID(ctx, id)
-    if err != nil {
-        return nil, err
-    }
-
-    // 3. キャッシュに保存
-    s.cache.Set(ctx, id, user, 10*time.Minute)
-
-    return user, nil
-}
-```
-
-**非同期処理**
-```go
-// メッセージキューを使った非同期処理
-type EventPublisher interface {
-    Publish(ctx context.Context, event Event) error
-}
-
-func (s *Service) CreateOrder(ctx context.Context, order Order) error {
-    // 1. 注文を保存（同期）
-    if err := s.orderRepo.Save(ctx, order); err != nil {
-        return err
-    }
-
-    // 2. 通知などの重い処理は非同期で実行
-    event := OrderCreatedEvent{OrderID: order.ID}
-    if err := s.eventPublisher.Publish(ctx, event); err != nil {
-        // ログを記録するが、エラーは返さない
-        s.logger.Error("failed to publish event", err)
-    }
-
-    return nil
-}
-```
+**負荷分散**
+- ラウンドロビン：順番にリクエストを振り分け
+- 最小接続：接続数が最も少ないサーバーに振り分け
+- IPハッシュ：クライアントIPに基づいて振り分け
 
 #### 障害耐性パターン
 
 **Circuit Breaker Pattern**
-```go
-type CircuitBreaker struct {
-    maxFailures int
-    timeout     time.Duration
-    failures    int
-    lastFailure time.Time
-    state       string // "closed", "open", "half-open"
-    mu          sync.Mutex
-}
-
-func (cb *CircuitBreaker) Call(fn func() error) error {
-    cb.mu.Lock()
-    defer cb.mu.Unlock()
-
-    if cb.state == "open" {
-        if time.Since(cb.lastFailure) > cb.timeout {
-            cb.state = "half-open"
-        } else {
-            return errors.New("circuit breaker is open")
-        }
-    }
-
-    err := fn()
-    if err != nil {
-        cb.failures++
-        cb.lastFailure = time.Now()
-        if cb.failures >= cb.maxFailures {
-            cb.state = "open"
-        }
-        return err
-    }
-
-    cb.failures = 0
-    cb.state = "closed"
-    return nil
-}
-```
+- 目的：障害のあるサービスへのリクエストを一時的に遮断
+- 状態：Closed（正常）、Open（遮断）、Half-Open（試行）
+- 利点：障害の連鎖防止、システムの自己修復
 
 **Retry Pattern**
-```go
-func RetryWithBackoff(ctx context.Context, maxRetries int, fn func() error) error {
-    var err error
-    for i := 0; i < maxRetries; i++ {
-        if err = fn(); err == nil {
-            return nil
-        }
+- 実装：指数バックオフ、ジッター
+- 注意点：冪等性の確保、最大リトライ回数の設定
+- 使用場面：一時的なネットワークエラー、リソースの一時的な枯渇
 
-        backoff := time.Duration(math.Pow(2, float64(i))) * time.Second
-        select {
-        case <-time.After(backoff):
-            continue
-        case <-ctx.Done():
-            return ctx.Err()
-        }
-    }
-    return err
-}
-```
+**Bulkhead Pattern**
+- 目的：障害を隔離し、システム全体への影響を防ぐ
+- 実装：リソースプールの分離、スレッドプールの分割
+
+**Timeout Pattern**
+- 重要性：無限待ちを防ぐ
+- 設定：適切なタイムアウト値の決定、タイムアウト後の処理
 
 ### 5. API設計
 
@@ -684,6 +300,7 @@ GET    /api/v1/users          # ユーザー一覧取得
 GET    /api/v1/users/:id      # 特定ユーザー取得
 POST   /api/v1/users          # ユーザー作成
 PUT    /api/v1/users/:id      # ユーザー更新
+PATCH  /api/v1/users/:id      # ユーザー部分更新
 DELETE /api/v1/users/:id      # ユーザー削除
 
 # ネストしたリソース
@@ -691,64 +308,29 @@ GET    /api/v1/users/:id/posts       # 特定ユーザーの投稿一覧
 POST   /api/v1/users/:id/posts       # ユーザーの投稿作成
 ```
 
-**適切なHTTPステータスコード**
-```go
-func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
-    var req CreateUserRequest
-    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-        http.Error(w, "Invalid request", http.StatusBadRequest) // 400
-        return
-    }
+**HTTPステータスコードの適切な使用**
+- 2xx：成功（200 OK、201 Created、204 No Content）
+- 3xx：リダイレクト（301 Moved Permanently、302 Found）
+- 4xx：クライアントエラー（400 Bad Request、401 Unauthorized、404 Not Found）
+- 5xx：サーバーエラー（500 Internal Server Error、503 Service Unavailable）
 
-    user, err := h.service.CreateUser(r.Context(), req)
-    if err != nil {
-        if errors.Is(err, ErrEmailAlreadyExists) {
-            http.Error(w, "Email already exists", http.StatusConflict) // 409
-            return
-        }
-        http.Error(w, "Internal error", http.StatusInternalServerError) // 500
-        return
-    }
-
-    w.WriteHeader(http.StatusCreated) // 201
-    json.NewEncoder(w).Encode(user)
-}
-```
-
-**バージョニング**
-```go
-// URLパスでバージョン管理
-router.HandleFunc("/api/v1/users", handlerV1.GetUsers)
-router.HandleFunc("/api/v2/users", handlerV2.GetUsers)
-
-// ヘッダーでバージョン管理
-func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
-    version := r.Header.Get("API-Version")
-    switch version {
-    case "2.0":
-        h.getUsersV2(w, r)
-    default:
-        h.getUsersV1(w, r)
-    }
-}
-```
+**バージョニング戦略**
+- URLパス：`/api/v1/users`、`/api/v2/users`
+- クエリパラメータ：`/api/users?version=1`
+- ヘッダー：`Accept: application/vnd.api+json;version=1`
 
 **ページネーション**
-```go
-type PaginationRequest struct {
-    Page     int `json:"page"`
-    PageSize int `json:"page_size"`
-}
+```
+# オフセットベース
+GET /api/v1/users?page=1&page_size=20
 
-type PaginationResponse struct {
-    Items      []interface{} `json:"items"`
-    TotalCount int           `json:"total_count"`
-    Page       int           `json:"page"`
-    PageSize   int           `json:"page_size"`
-    TotalPages int           `json:"total_pages"`
-}
+# カーソルベース
+GET /api/v1/users?cursor=abc123&limit=20
+```
 
-// GET /api/v1/users?page=1&page_size=20
+**フィルタリングとソート**
+```
+GET /api/v1/users?status=active&sort=created_at&order=desc
 ```
 
 #### GraphQL設計原則
@@ -776,6 +358,10 @@ input CreateUserInput {
   name: String!
 }
 ```
+
+**N+1問題の回避**
+- DataLoader パターンの使用
+- バッチ処理とキャッシング
 
 ### 6. データモデル設計
 
@@ -811,438 +397,231 @@ CREATE TABLE post_tags (
 ```
 
 **非正規化（NoSQL）**
-```go
-// MongoDB用のドキュメント設計
-type Post struct {
-    ID        primitive.ObjectID `bson:"_id"`
-    UserID    primitive.ObjectID `bson:"user_id"`
-    UserEmail string             `bson:"user_email"` // 非正規化
-    Title     string             `bson:"title"`
-    Content   string             `bson:"content"`
-    Tags      []string           `bson:"tags"` // 埋め込み
-    CreatedAt time.Time          `bson:"created_at"`
-}
-```
+- 目的：読み取りパフォーマンスの向上
+- トレードオフ：データの重複、更新時の複雑さ
+- 使用場面：読み取り頻度が書き込みより圧倒的に多い場合
 
 #### ドメイン駆動設計（DDD）
 
-**エンティティと値オブジェクト**
-```go
-// エンティティ：IDを持ち、ライフサイクルがある
-type User struct {
-    id       UserID
-    email    Email
-    profile  Profile
-    version  int
-}
+**主要概念**
 
-// 値オブジェクト：不変で、等価性は値で判断
-type Email struct {
-    value string
-}
+**エンティティ**
+- 特徴：一意の識別子を持つ、ライフサイクルがある
+- 例：User、Order、Product
 
-func NewEmail(value string) (Email, error) {
-    if !isValidEmail(value) {
-        return Email{}, errors.New("invalid email")
-    }
-    return Email{value: value}, nil
-}
-
-func (e Email) String() string {
-    return e.value
-}
-```
+**値オブジェクト**
+- 特徴：不変、等価性は値で判断、識別子を持たない
+- 例：Email、Address、Money
 
 **集約（Aggregate）**
-```go
-// 集約ルート
-type Order struct {
-    id         OrderID
-    customerId CustomerID
-    items      []OrderItem
-    status     OrderStatus
-    total      Money
-}
+- 目的：関連するエンティティと値オブジェクトをまとめて整合性を保つ
+- 集約ルート：集約への唯一のエントリポイント
+- 原則：集約の境界を超えた参照はIDで行う
 
-// 集約内のエンティティ
-type OrderItem struct {
-    productId ProductID
-    quantity  int
-    price     Money
-}
+**リポジトリ**
+- 目的：永続化の詳細を隠蔽する
+- 原則：集約ルート単位でリポジトリを定義
 
-// 集約を通じてのみ変更
-func (o *Order) AddItem(productId ProductID, quantity int, price Money) error {
-    if o.status != OrderStatusDraft {
-        return errors.New("cannot modify confirmed order")
-    }
+**ドメインサービス**
+- 使用場面：複数のエンティティにまたがるロジック、エンティティに属さないビジネスルール
 
-    item := OrderItem{
-        productId: productId,
-        quantity:  quantity,
-        price:     price,
-    }
-    o.items = append(o.items, item)
-    o.calculateTotal()
-    return nil
-}
-
-func (o *Order) calculateTotal() {
-    // 集約内で整合性を保つ
-    total := Money{amount: 0}
-    for _, item := range o.items {
-        total = total.Add(item.price.Multiply(item.quantity))
-    }
-    o.total = total
-}
-```
+**ドメインイベント**
+- 目的：ドメイン内の重要な出来事を表現
+- 利点：疎結合、監査ログ、イベントソーシング
 
 ## ベストプラクティス
 
 ### 1. 依存性注入（Dependency Injection）
 
-**コンストラクタインジェクション**
-```go
-type UserService struct {
-    repo   UserRepository
-    logger Logger
-    cache  CacheService
-}
+**原則**
+- コンストラクタインジェクション：依存を明示的にする
+- インターフェースへの依存：具体実装ではなく抽象に依存
+- 疎結合：コンポーネント間の結合度を下げる
 
-func NewUserService(
-    repo UserRepository,
-    logger Logger,
-    cache CacheService,
-) *UserService {
-    return &UserService{
-        repo:   repo,
-        logger: logger,
-        cache:  cache,
-    }
-}
-```
-
-**インターフェースの活用**
-```go
-// テスト可能な設計
-type UserService struct {
-    repo UserRepository // インターフェース
-}
-
-// モックを使ったテスト
-type MockUserRepository struct {
-    users map[string]*User
-}
-
-func (m *MockUserRepository) FindByID(id string) (*User, error) {
-    user, ok := m.users[id]
-    if !ok {
-        return nil, ErrNotFound
-    }
-    return user, nil
-}
-```
+**利点**
+- テスト容易性：モックやスタブを注入できる
+- 柔軟性：実装を簡単に切り替えられる
+- 保守性：依存関係が明確
 
 ### 2. エラーハンドリング
 
-**カスタムエラー型**
-```go
-type DomainError struct {
-    Code    string
-    Message string
-    Cause   error
-}
+**原則**
+- 適切な抽象レベルでエラーを処理
+- エラーコンテキストの保持
+- リカバリー可能なエラーと不可能なエラーの区別
 
-func (e *DomainError) Error() string {
-    return fmt.Sprintf("[%s] %s", e.Code, e.Message)
-}
-
-func (e *DomainError) Unwrap() error {
-    return e.Cause
-}
-
-var (
-    ErrNotFound      = &DomainError{Code: "NOT_FOUND", Message: "resource not found"}
-    ErrUnauthorized  = &DomainError{Code: "UNAUTHORIZED", Message: "unauthorized access"}
-    ErrInvalidInput  = &DomainError{Code: "INVALID_INPUT", Message: "invalid input"}
-)
-```
-
-**エラーラッピング**
-```go
-func (s *Service) CreateUser(ctx context.Context, email string) (*User, error) {
-    user := &User{Email: email}
-
-    if err := s.repo.Create(ctx, user); err != nil {
-        return nil, fmt.Errorf("failed to create user: %w", err)
-    }
-
-    return user, nil
-}
-
-// 呼び出し側でエラーチェック
-if err := service.CreateUser(ctx, email); err != nil {
-    if errors.Is(err, ErrEmailAlreadyExists) {
-        // 特定のエラーに対する処理
-    }
-}
-```
+**パターン**
+- カスタムエラー型：ドメイン固有のエラー
+- エラーラッピング：コンテキストを追加しながら伝播
+- センチネルエラー：特定のエラー条件を表す定数
 
 ### 3. 設定管理
 
-**環境変数とデフォルト値**
-```go
-type Config struct {
-    Port         int
-    DatabaseURL  string
-    CacheTimeout time.Duration
-}
+**原則**
+- 12 Factor App：設定を環境変数で管理
+- デフォルト値：合理的なデフォルトを提供
+- バリデーション：起動時に設定を検証
 
-func LoadConfig() (*Config, error) {
-    return &Config{
-        Port:         getEnvAsInt("PORT", 8080),
-        DatabaseURL:  getEnv("DATABASE_URL", ""),
-        CacheTimeout: getEnvAsDuration("CACHE_TIMEOUT", 10*time.Minute),
-    }, nil
-}
-
-func getEnv(key, defaultValue string) string {
-    if value := os.Getenv(key); value != "" {
-        return value
-    }
-    return defaultValue
-}
-```
+**パターン**
+- 環境別設定ファイル
+- 設定の階層化：デフォルト < 環境 < 実行時
 
 ### 4. ロギング
 
-**構造化ロギング**
-```go
-type Logger interface {
-    Info(msg string, fields ...Field)
-    Error(msg string, err error, fields ...Field)
-}
+**原則**
+- 適切なログレベル：DEBUG、INFO、WARN、ERROR
+- 構造化ロギング：JSONなど機械可読な形式
+- コンテキスト情報：リクエストID、ユーザーIDなど
 
-type Field struct {
-    Key   string
-    Value interface{}
-}
-
-// 使用例
-logger.Info("user created",
-    Field{Key: "user_id", Value: user.ID},
-    Field{Key: "email", Value: user.Email},
-)
-
-logger.Error("failed to create user", err,
-    Field{Key: "email", Value: email},
-)
-```
+**注意点**
+- 機密情報のログ出力を避ける
+- パフォーマンスへの影響を考慮
 
 ### 5. テスタビリティ
 
-**テーブル駆動テスト**
-```go
-func TestValidateEmail(t *testing.T) {
-    tests := []struct {
-        name    string
-        email   string
-        wantErr bool
-    }{
-        {
-            name:    "valid email",
-            email:   "user@example.com",
-            wantErr: false,
-        },
-        {
-            name:    "missing @",
-            email:   "userexample.com",
-            wantErr: true,
-        },
-        {
-            name:    "empty email",
-            email:   "",
-            wantErr: true,
-        },
-    }
+**原則**
+- 単一責任：テスト対象を明確にする
+- 依存性注入：モックを注入できるようにする
+- 副作用の分離：純粋な関数とそうでない関数を分ける
 
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            err := validateEmail(tt.email)
-            if (err != nil) != tt.wantErr {
-                t.Errorf("validateEmail() error = %v, wantErr %v", err, tt.wantErr)
-            }
-        })
-    }
-}
-```
+**パターン**
+- テーブル駆動テスト：複数のテストケースをデータ駆動で実行
+- モック/スタブ：外部依存を置き換える
+- テストダブル：ダミー、スタブ、スパイ、モック、フェイク
 
 ## よくある落とし穴とその回避方法
 
 ### 1. 過度な抽象化
 
 **問題**
-```go
-// 過度に抽象化された不必要なレイヤー
-type DataAccessObject interface {
-    Execute(query Query) (Result, error)
-}
-
-type Query interface {
-    GetSQL() string
-    GetParams() []interface{}
-}
-
-type Result interface {
-    GetData() interface{}
-}
-```
+- 不必要に複雑なレイヤーやインターフェース
+- 実際の要件を超えた汎用化
 
 **解決策**
-```go
-// 必要な抽象化のみ
-type UserRepository interface {
-    Create(ctx context.Context, user *User) error
-    FindByID(ctx context.Context, id string) (*User, error)
-}
-```
+- YAGNI原則に従う
+- 実際の要件に基づいて設計する
+- 3つのルール：3回同じことをするまで抽象化しない
 
 ### 2. 神オブジェクト（God Object）
 
 **問題**
-```go
-// すべての責任を持つ巨大なサービス
-type ApplicationService struct {
-    // 数十のフィールド...
-}
-
-func (s *ApplicationService) DoEverything() {
-    // 数百行のコード...
-}
-```
+- すべての責任を持つ巨大なクラスやモジュール
+- 高い結合度、低い凝集度
 
 **解決策**
-```go
-// 責任を分離
-type UserService struct {
-    repo UserRepository
-}
-
-type AuthService struct {
-    userRepo UserRepository
-    tokenGen TokenGenerator
-}
-
-type NotificationService struct {
-    emailSender EmailSender
-}
-```
+- 単一責任原則を適用
+- 責任を適切に分離
+- ドメイン駆動設計を検討
 
 ### 3. 循環依存
 
 **問題**
-```go
-// package A
-import "projectb"
-
-type ServiceA struct {
-    serviceB *b.ServiceB
-}
-
-// package B
-import "projecta"
-
-type ServiceB struct {
-    serviceA *a.ServiceA  // 循環依存
-}
-```
+- モジュールAがBに依存し、BがAに依存する
+- コンパイルやテストの困難さ
 
 **解決策**
-```go
-// インターフェースを使って依存を切る
-// package A
-type ServiceBInterface interface {
-    DoSomething() error
-}
-
-type ServiceA struct {
-    serviceB ServiceBInterface
-}
-
-// package B
-// import "projecta" は不要
-
-type ServiceB struct {
-    // ServiceAに直接依存しない
-}
-```
+- 依存性逆転の原則を適用
+- インターフェースで依存を切る
+- レイヤーの明確化
 
 ### 4. プリマチュアオプティマイゼーション
 
 **問題**
-最初から複雑なキャッシング、シャーディング、非同期処理を導入する。
+- 最初から複雑な最適化を導入
+- 実際のボトルネックを測定せずに最適化
 
 **解決策**
-まずはシンプルに実装し、パフォーマンステストで問題が確認されてから最適化する。
+- まずはシンプルに実装
+- プロファイリングでボトルネックを特定
+- 必要になってから最適化
 
-```go
-// まずはシンプルに
-func (s *Service) GetUser(ctx context.Context, id string) (*User, error) {
-    return s.repo.FindByID(ctx, id)
-}
+### 5. アンチパターンの適用
 
-// 必要になったらキャッシングを追加
-func (s *Service) GetUser(ctx context.Context, id string) (*User, error) {
-    if user, err := s.cache.Get(ctx, id); err == nil {
-        return user, nil
-    }
+**よくあるアンチパターン**
+- スパゲッティコード：構造化されていない複雑な制御フロー
+- Lava Flow：使われていない古いコードが残る
+- Golden Hammer：すべての問題に同じ解決策を適用
+- Copy-Paste Programming：コードの重複
 
-    user, err := s.repo.FindByID(ctx, id)
-    if err != nil {
-        return nil, err
-    }
-
-    s.cache.Set(ctx, id, user, 10*time.Minute)
-    return user, nil
-}
-```
+**回避方法**
+- コードレビュー
+- リファクタリングの習慣化
+- 技術的負債の定期的な返済
 
 ## リファレンス
 
 ### バンドルされた参考資料
 
-- `references/design_patterns.md` - 主要な設計パターンの詳細とGoでの実装例
+このスキルには、以下の詳細なリファレンスがバンドルされています：
+
+- `references/design_patterns.md` - 主要な設計パターンの詳細と実装例
 - `references/architecture_patterns.md` - アーキテクチャパターンの詳細ガイド
 - `references/solid_principles.md` - SOLID原則の深い理解と実践例
+
+これらのリファレンスには、具体的なコード例（Go言語）と詳細な説明が含まれています。
 
 ### 推奨リソース
 
 **書籍**
-- 『Clean Architecture』Robert C. Martin
-- 『Domain-Driven Design』Eric Evans
-- 『Design Patterns』Gang of Four
-- 『Refactoring』Martin Fowler
+- 『Clean Architecture』Robert C. Martin - アーキテクチャ設計の基本原則
+- 『Domain-Driven Design』Eric Evans - DDDの原典
+- 『Design Patterns』Gang of Four - 設計パターンの古典
+- 『Refactoring』Martin Fowler - リファクタリング技法
+- 『Building Microservices』Sam Newman - マイクロサービス設計
 
 **オンラインリソース**
-- Go言語の公式ドキュメント
-- クリーンアーキテクチャのサンプル実装
-- マイクロサービスパターンのカタログ
+- Martin Fowler's Blog - アーキテクチャとパターンに関する記事
+- Microsoft Architecture Guide - 包括的なアーキテクチャガイド
+- AWS Architecture Center - クラウドアーキテクチャのベストプラクティス
 
 ## 使用上の注意
 
 ### このスキルを効果的に使うために
 
-1. **コンテキストを提供する**：現在のアーキテクチャや制約条件を説明してください
-2. **具体的な要件を明記する**：スケーラビリティ、メンテナンス性など、優先する品質を伝えてください
-3. **既存コードを共有する**：リファクタリングの場合は、現在のコード構造を見せてください
-4. **トレードオフを確認する**：設計の選択には必ずトレードオフがあります。要件に応じて最適な選択を検討します
+1. **コンテキストを提供する**
+   - 現在のアーキテクチャや制約条件を説明してください
+   - 使用している技術スタック（言語、フレームワーク）を明示してください
+
+2. **具体的な要件を明記する**
+   - スケーラビリティ、メンテナンス性、パフォーマンスなど、優先する品質を伝えてください
+   - トレードオフの判断基準を共有してください
+
+3. **既存コードを共有する**
+   - リファクタリングの場合は、現在のコード構造を見せてください
+   - 問題点や改善したい点を具体的に説明してください
+
+4. **トレードオフを確認する**
+   - 設計の選択には必ずトレードオフがあります
+   - 要件に応じて最適な選択を検討します
 
 ### 設計の進め方
 
-1. **要件の理解**：機能要件と非機能要件を明確にする
-2. **ドメインモデリング**：ビジネスドメインを理解し、適切な抽象化を見つける
-3. **アーキテクチャ選択**：システムの特性に合ったアーキテクチャを選ぶ
-4. **パターンの適用**：問題に合った設計パターンを適用する
-5. **反復的改善**：フィードバックを得ながら設計を改善する
+1. **要件の理解**
+   - 機能要件：システムが何をすべきか
+   - 非機能要件：パフォーマンス、スケーラビリティ、セキュリティなど
+
+2. **ドメインモデリング**
+   - ビジネスドメインを理解する
+   - 適切な抽象化を見つける
+   - ユビキタス言語を定義する
+
+3. **アーキテクチャ選択**
+   - システムの特性に合ったアーキテクチャを選ぶ
+   - 長期的な保守性を考慮する
+
+4. **パターンの適用**
+   - 問題に合った設計パターンを適用する
+   - パターンの乱用を避ける
+
+5. **反復的改善**
+   - フィードバックを得ながら設計を改善する
+   - リファクタリングを継続的に行う
+
+### 重要な考え方
 
 設計は一度で完璧にする必要はありません。継続的に改善していくプロセスです。
+
+- **段階的な改善**：小さな改善を積み重ねる
+- **フィードバックループ**：実装、測定、学習のサイクルを回す
+- **シンプルさの追求**：複雑さは必要な時だけ導入する
+- **チームとのコミュニケーション**：設計の意図を共有する
